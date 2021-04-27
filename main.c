@@ -263,8 +263,8 @@ long ArmaCodigo(int codigo, int cantOperandos, char op1[DIM_COMANDO], char op2[D
     char aux2[DIM_COMANDO] = {0};
     int opA = 0, opB = 0;
     int tipoOp1=0, tipoOp2 = 0;
-    ArmaOperando(op1,cantOperandos,indice,&opA, &errorOp,&tipoOp1);
-    ArmaOperando(op2,cantOperandos,indice,&op2, &errorOp,&tipoOp2);
+    ArmaOperando(op1,cantOperandos,indice,&opA, errorOp,&tipoOp1);
+    ArmaOperando(op2,cantOperandos,indice,&opB, errorOp,&tipoOp2);
     if (cantOperandos == 2)
         codAux = codigo << 28 | ((tipoOp1 << 26) & 0xC000000) | ((tipoOp2 << 24) & 0x3000000) | ((opA << 12) & 0xFFF000) | (opB & 0xFFF);
     else if (cantOperandos == 1)
