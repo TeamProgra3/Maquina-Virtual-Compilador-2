@@ -28,7 +28,7 @@ typedef struct {
     char rotulo[DIM_ROTULO];
     int posicion;
 } Rotulos;
-
+void magia();
 void leeArchivo(Linea v[DIM_LINEACOMANDO], int *cant, char[]);                               //lee del archivo asembler y lo traduce al binario
 void creaComando(char comando[DIM_COMANDO], char comentario[DIM_COMENTARIO], Linea *linea);  //Obvio que crea el comando jaja
 void corrigeComando(char comando[DIM_COMANDO], Linea *linea);                                //corrige el comando, es decir se fija si tiene un rotulo prefijado o no
@@ -51,7 +51,7 @@ int main(int argsCant, char *arg[])  //argsCant es cantidad de argumentos
     Linea Lineas[DIM_LINEACOMANDO];
     instruccion instrucciones[DIM_OPERACIONES];
     cargaInstrucciones(instrucciones);
-
+    magia();
     if (argsCant >= 3) {
         leeArchivo(Lineas, &cant, arg[1]);
         compilaCodigo(Lineas, cant, instrucciones, arg[2], &errorSintaxis);  //arg[1] archivo assembler y arg[2] es nombre archivo salida .bin
@@ -439,4 +439,8 @@ void ArmaOperando(char op[DIM_COMANDO],int cantOperandos,int indice,int *valor,i
                 printf("\nAdvertencia EL VALOR EXCEDE EL LIMITE MAXIMO DE MEMORIA: linea: %i - Valor original: %d - Valor truncado a: %d \n", indice, *valor, valorRealOP);
             }
     }
+}
+
+void magia(){
+    printf("-----------------------VERSION 1.2------------------------");
 }
