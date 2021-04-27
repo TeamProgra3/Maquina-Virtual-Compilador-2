@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "funciones.h"
 #include "operaciones.h"
 #define DIM_ROTULO 10
@@ -21,7 +20,6 @@ typedef struct  //structura que maneja la salida por consola de lo que va hacien
     char comando[DIM_COMANDO];
     char comentario[DIM_COMENTARIO];
 } Linea;
-
 typedef struct {
     char rotulo[DIM_ROTULO];
     int posicion;
@@ -35,17 +33,12 @@ void compilaCodigo(Linea v[DIM_LINEACOMANDO], int cant, instruccion ins[DIM_OPER
 void creaBinario(Linea linea[DIM_LINEACOMANDO], int cantOperaciones, char nombreArch[]);
 void RecuperaInstruccion(Linea LineaActual, char instruccionActual[DIM_COMANDO], Rotulos rotulos[], int cant, char op1[], char op2[]);
 long ArmaCodigo(int, int, char op1[], char op2[], int *, int i);
-
+void ArmaOperando(char op[DIM_COMANDO],int cantOperandos,int indice,int *valor,int* errorOp,int *tipo);
 int BuscaRotulo(char op1[], Rotulos rotulos[CANT_CELDAS], int cantRotulos);
-
 void BuscaComa(char[], int *error);
-
 void CorrigeBlancos(char cadena[DIM_COMANDO]);
-
 int anytoint(char *s, char **out);
-
 int ComandoValido(char comando[DIM_COMANDO], instruccion ins[DIM_OPERACIONES]);
-
 void cargaInstrucciones(instruccion ins[DIM_OPERACIONES]);
 
 int main(int argsCant, char *arg[])  //argsCant es cantidad de argumentos
@@ -77,7 +70,6 @@ int main(int argsCant, char *arg[])  //argsCant es cantidad de argumentos
             printf("\nCompilacion exitosa, no se detectaron errores de sintaxis\n\n");
     return 0;
 }
-
 void leeArchivo(Linea v[DIM_LINEACOMANDO], int *cant, char ArchFuente[40]) {
     int i = 0;                        //posicion del caracter en la palabra (aclaracion: esto solo se utiliza en el codigo y no en las aclaraciones\comentarios)
     char caracter;                    //para leer un unico caracter del archivo
@@ -86,44 +78,28 @@ void leeArchivo(Linea v[DIM_LINEACOMANDO], int *cant, char ArchFuente[40]) {
     FILE *arch;
 
     arch = fopen(ArchFuente, "rt");
-    //arch = fopen("C:/Users/Augusto/Documents/Facultad/Arquitectura/MaquinaVirtual/maquina-virtual/PRUEBA.txt", "rt");
-
-    //  INICIA LA LACTURA DE LA PRIMERA LINEA DEL ARCHIVO
-    //  LEO EL PRIMER CARACTER DEL ARCHIVO
     fscanf(arch, "%c", &caracter);
     while (!feof(arch)) {
-        //  INICIA EL RECORRIDO DEL REGLON
         while (caracter != ';' && caracter != '\n' && !feof(arch)) {
-            //  ALMACENA LOS CHARS HASTA QUE ENCUENTRE UN COMENTARIO O UN SALTO DE LINEA
             comando[i++] = caracter;
             fscanf(arch, "%c", &caracter);
         }
-
         comando[i] = '\0';
         i = 0;
         while (caracter != '\n' && !feof(arch)) {
-            //  HASTA QUE NO TERMINE EL REGLON ALMACENO LOS CARACTERES EN COMENTARIO
-            //  LA UNICA MANERA DE QUE LLEGUE A EJECUTAR ESTE WHILLE ES QUE YA TERMINE LA LINEA O TERMINE EL COMANDO
-            //  POR LO QUE SERIA EL SOLO EL COMENTARIO O UN REGLON VACIO
             comentario[i++] = caracter;
             fscanf(arch, "%c", &caracter);
         }
         comentario[i] = '\0';
         i = 0;
-        //
-        //  INGRESA EN EL VECTOR DE LINEA LOS DATOS DEL ARCHIVO
         creaComando(comando, comentario, &v[*cant]);
         (*cant)++;
-        //
         comando[0] = '\0';
         comentario[0] = '\0';
-        //TERMINA EL RECORRIDO DEL REGLON
         fscanf(arch, "%c", &caracter);
-        //SALTO DE LINEA
     }
     fclose(arch);
 }
-
 void creaComando(char comando[DIM_COMANDO], char comentario[DIM_COMENTARIO], Linea *linea) {
     int i = 0;
     strcpy(linea->comentario, comentario);
@@ -135,7 +111,6 @@ void creaComando(char comando[DIM_COMANDO], char comentario[DIM_COMENTARIO], Lin
         corrigeComando(comando, linea);
     }
 }
-
 void corrigeComando(char comando[DIM_COMANDO], Linea *linea) {
     int i = 0;
     int j = 0;
@@ -152,11 +127,10 @@ void corrigeComando(char comando[DIM_COMANDO], Linea *linea) {
     if (comando[i] == ':') {
         //  SI SE ENCUENTA CON UN ':' (PRESENCIA DE UN ROTULO) LO INGRESA EN LA SECCION ROTULO
         i++;
-        //aux[j++] = ':';
         aux[j++] = '\0';
         j = 0;
         strcpy(linea->rotulo, aux);
-        while (comando[i] == ' ' || comando[i] == '	')  //se puede usar la funcion corrige blancos
+        while (comando[i] == ' ' || comando[i] == '	')  
             //  DESCARTA LOS ESPACIOS EN BLANCO
             i++;
         while (comando[i] != '\0') {
@@ -171,7 +145,6 @@ void corrigeComando(char comando[DIM_COMANDO], Linea *linea) {
         linea->rotulo[0] = '0';
     }
 }
-
 void muestra(Linea v[DIM_LINEACOMANDO], int cant) {
     Linea linea;
     char aux[DIM_COMANDO];
@@ -191,7 +164,6 @@ void muestra(Linea v[DIM_LINEACOMANDO], int cant) {
         printf("\n");
     }
 }
-
 void compilaCodigo(Linea linea[DIM_LINEACOMANDO], int cant, instruccion instrucciones[DIM_OPERACIONES], char nombreArch[40], int *error) {
     int errorOperando, i, cantRotulos = 0, cantOpsValidas = 0;
     long codOp;
@@ -239,14 +211,12 @@ void compilaCodigo(Linea linea[DIM_LINEACOMANDO], int cant, instruccion instrucc
     if (!(*error))
         creaBinario(linea, cant, nombreArch);
 }
-
 void RecuperaInstruccion(Linea LineaActual, char instruccionActual[DIM_COMANDO], Rotulos rotulos[CANT_CELDAS], int cantRotulos, char op1[DIM_COMANDO], char op2[DIM_COMANDO]) {
     int pos, j, i = 0;
     char c = LineaActual.comando[0];
     op1[0] = op2[0] = '\0';
     while (c != ' ' && c != '\0') {  //OPERACION
-        instruccionActual[i] = c;
-        i++;
+        instruccionActual[i++] = c;
         c = LineaActual.comando[i];
     }
     instruccionActual[i] = '\0';
@@ -256,10 +226,8 @@ void RecuperaInstruccion(Linea LineaActual, char instruccionActual[DIM_COMANDO],
     if (c != '\0') {
         char c = LineaActual.comando[i];
         while (c != ',' && c != '\0') {  //PRIMER OPERANDO
-            op1[j] = c;
-            i++;
-            j++;
-            c = LineaActual.comando[i];
+            op1[j++] = c;           
+            c = LineaActual.comando[++i];
         }
         i++;
         op1[j] = '\0';
@@ -268,15 +236,12 @@ void RecuperaInstruccion(Linea LineaActual, char instruccionActual[DIM_COMANDO],
         if (c != '\0') {
             char c = LineaActual.comando[i];
             while (c != ',' && c != '\0') {  //SEGUNDO OPERANDO
-                op2[j] = c;
-                i++;
-                j++;
-                c = LineaActual.comando[i];
+                op2[j++] = c;
+                c = LineaActual.comando[++i];
             }
             op2[j] = '\0';
             CorrigeBlancos(op2);
         }
-
         //Verificar si el primer operando es un rotulo, en ese caso modificar el rotulo por el numero de linea correspondiente
         if (op1[0] != '[' && op1[0] != '@' && op1[0] != '%' && !(op1[1] == 'X' && op1[0] <= 'F' && op1[0] >= 'A') && !(op1[0] >= '0' && op1[0] <= '9') && strcmp(op1,"AC")!=0) {  //Es un rotulo
             pos = BuscaRotulo(op1, rotulos, cantRotulos);
@@ -289,91 +254,13 @@ void RecuperaInstruccion(Linea LineaActual, char instruccionActual[DIM_COMANDO],
         }
     }
 }
-
 long ArmaCodigo(int codigo, int cantOperandos, char op1[DIM_COMANDO], char op2[DIM_COMANDO], int *errorOp, int indice) {
     long codAux = 0;
-    int valorRealOPA, valorRealOPB, i;
-    char aux[DIM_COMANDO] = {0};
     char aux2[DIM_COMANDO] = {0};
-    int tipoOp1 = 0, tipoOp2 = 0, opA = 0, opB = 0;
-
-    if (op1[0] != '\0') {
-        if (op1[0] == '[') {  //Operador de tipo celda memoria
-            i = 1;
-            while (op1[i] != ']' && op1[i] != '\0') {
-                aux[i - 1] = op1[i];
-                i++;
-            }
-            if (op1[i] != '\0') {
-                aux[i] = '\0';
-                opA = anytoint(aux, NULL);
-                tipoOp1 = 2;
-            } else
-                *errorOp = 1;  //error por falta de ]
-        } else if (op1[0] >= 'A' && op1[0] <= 'F' && op1[1] == 'X') { //Para pasar la letra a su valor decimal (A=10, B=11,...,F=15)
-            tipoOp1 = 1;
-            opA = op1[0] - 55;      
-        } else if (strcmp(op1,"AC")==0) {    
-            tipoOp1 = 1;
-            opA = 9;  
-        } else if ((int)op1[0] == 39) {  //Comilla simple '
-            opA = (int)op1[1];
-        } else {  // Es un inmediato
-            if (op1[strlen(op1) - 1] != ']') {
-                tipoOp1 = 0;
-                opA = anytoint(op1, NULL);
-            } else {  //Falta el [ (ERROR)
-                *errorOp = 1;
-            }
-        }
-        if (cantOperandos == 2) {
-            if (opA < -2048 || opA > 2047) {  //-2048 a 2047
-                valorRealOPA = opA << 20;
-                valorRealOPA = valorRealOPA >> 20;
-                printf("\nAdvertencia EL VALOR EXCEDE EL LIMITE MAXIMO DE MEMORIA: linea: %i - Valor original: %d - Valor truncado a: %d \n", indice, opA, valorRealOPA);
-            }
-        } else if (cantOperandos == 1)
-            if (opA < -32768 || opA > 32767) {  // -32768 a 32767
-                valorRealOPA = opA << 16;
-                valorRealOPA = valorRealOPA >> 16;
-                printf("\nAdvertencia EL VALOR EXCEDE EL LIMITE MAXIMO DE MEMORIA: linea: %i - Valor original: %d - Valor truncado a: %d \n", indice, opA, valorRealOPA);
-            }
-    }
-    if (op2[0] != '\0') {
-        if (op2[0] == '[') {  //Operador de tipo celda memoria
-            i = 1;
-            while (op2[i] != ']' && op2[i] != '\0') {
-                aux2[i - 1] = op2[i];
-                i++;
-            }
-            if (op2[i] != '\0') {
-                aux2[i] = '\0';
-                opB = anytoint(aux2, NULL);
-                tipoOp2 = 2;
-            } else
-                *errorOp = 1;  //error por falta de ]
-        } else if (strcmp(op2,"AC")==0) {
-            tipoOp2 = 1;
-            opB =9;
-        } else if (op2[0] >= 'A' && op2[0] <= 'F' && op2[1] == 'X') {
-            tipoOp2 = 1;
-            opB = op2[0] - 55;           //Para pasar la letra a su valor decimal (A=10, B=11,...,F=15)
-        } else if ((int)op2[0] == 39) {  //Comilla simple '
-            opB = (int)op2[1];
-        } else {  //Inmediato
-            if (op2[strlen(op2) - 1] != ']') {
-                tipoOp2 = 0;
-                opB = anytoint(op2, NULL);
-            } else
-                *errorOp = 1;
-        }
-        if (opB < -2048 || opB > 2047) {
-            valorRealOPB = opB << 20;
-            valorRealOPB = valorRealOPB >> 20;
-            printf("\nAdvertencia EL VALOR EXCEDE EL LIMITE MAXIMO DE MEMORIA: linea: %i - Valor original: %d - Valor truncado a: %d \n", indice, opB, valorRealOPB);
-        }
-    }
-
+    int opA = 0, opB = 0;
+    int tipoOp1=0, tipoOp2 = 0;
+    ArmaOperando(op1,cantOperandos,indice,&opA, &errorOp,&tipoOp1);
+    ArmaOperando(op2,cantOperandos,indice,&op2, &errorOp,&tipoOp2);
     if (cantOperandos == 2)
         codAux = codigo << 28 | ((tipoOp1 << 26) & 0xC000000) | ((tipoOp2 << 24) & 0x3000000) | ((opA << 12) & 0xFFF000) | (opB & 0xFFF);
     else if (cantOperandos == 1)
@@ -382,7 +269,6 @@ long ArmaCodigo(int codigo, int cantOperandos, char op1[DIM_COMANDO], char op2[D
         codAux = codigo << 20;
     return codAux;
 }
-
 void creaBinario(Linea linea[DIM_LINEACOMANDO], int cantidadOperaciones, char nombreArch[]) {
     int i;
     FILE *archivoSalida;
@@ -392,7 +278,6 @@ void creaBinario(Linea linea[DIM_LINEACOMANDO], int cantidadOperaciones, char no
             fwrite(&linea[i].hexa, sizeof(linea[i].hexa), 1, archivoSalida);
     fclose(archivoSalida);
 }
-
 int BuscaRotulo(char op1[], Rotulos rotulos[CANT_CELDAS], int cantRotulos) {
     int i = 0;
     while (i < cantRotulos && strcmp(op1, rotulos[i].rotulo) != 0)
@@ -402,7 +287,6 @@ int BuscaRotulo(char op1[], Rotulos rotulos[CANT_CELDAS], int cantRotulos) {
     else
         return rotulos[i].posicion;
 }
-
 void BuscaComa(char cad[DIM_COMANDO], int *error) {
     int i = 0;
     while (i < strlen(cad) && cad[i] != ',')
@@ -410,18 +294,14 @@ void BuscaComa(char cad[DIM_COMANDO], int *error) {
     if (i == strlen(cad) || cad[strlen(cad) - 1] == ',')
         *error = 1;
 }
-
 void CorrigeBlancos(char cadena[DIM_COMANDO]) {
     char aux[DIM_COMANDO];
     //espacios al inicio
     int j = 0, i = 0;
     while (cadena[i] == ' ' || cadena[i] == '	')
         i++;
-    while (cadena[i] != '\0') {
-        aux[j] = cadena[i];
-        i++;
-        j++;
-    }
+    while (cadena[i] != '\0') 
+        aux[j++] = cadena[i++];       
     aux[j] = '\0';
     strcpy(cadena, aux);
     if (cadena[strlen(aux) - 1] == ' ' || cadena[strlen(aux) - 1] == '	') {
@@ -432,7 +312,6 @@ void CorrigeBlancos(char cadena[DIM_COMANDO]) {
         }
     }
 }
-
 int anytoint(char *s, char **out) {
     char *BASES = {"********@*#*****%"};
     int base = 10;
@@ -443,14 +322,12 @@ int anytoint(char *s, char **out) {
     }
     return strtol(s, out, base);
 }
-
 int ComandoValido(char comando[DIM_COMANDO], instruccion instrucciones[DIM_OPERACIONES]) {  //Verifica si existe la instruccion
     int i = 0;
     while (i < DIM_OPERACIONES && strcmp(comando, instrucciones[i].inst) != 0)
         i++;
     return (i < DIM_OPERACIONES ? i : -1);  //Devuelve la posicion del comando
 }
-
 void cargaInstrucciones(instruccion ins[DIM_OPERACIONES]) {
     //2 operandos
     strcpy(ins[0].inst, "MOV");
@@ -511,4 +388,51 @@ void cargaInstrucciones(instruccion ins[DIM_OPERACIONES]) {
     strcpy(ins[24].inst, "STOP");
     ins[24].codigo = 0xFF1;
     ins[24].operandos = 0;
+}
+void ArmaOperando(char op[DIM_COMANDO],int cantOperandos,int indice,int *valor,int* errorOp,int *tipo){
+    char aux[DIM_COMANDO] = {0};
+    int valorRealOP;
+    int i;
+    if (op[0] != '\0') {
+        if (op[0] == '[') {  //Operador de tipo celda memoria
+            i = 1;
+            while (op[i] != ']' && op[i] != '\0') {
+                aux[i - 1] = op[i];
+                i++;
+            }
+            if (op[i] != '\0') {
+                aux[i] = '\0';
+                *valor = anytoint(aux, NULL);
+                *tipo = 2;
+            } else
+                *errorOp = 1;  //error por falta de ]
+        } else if (op[0] >= 'A' && op[0] <= 'F' && op[1] == 'X') { //Para pasar la letra a su valor decimal (A=10, B=11,...,F=15)
+            *tipo = 1;
+            *valor = op[0] - 55;      
+        } else if (strcmp(op,"AC")==0) {    
+            *tipo = 1;
+            *valor = 9;  
+        } else if ((int)op[0] == 39) {  //Comilla simple '
+            *valor = (int)op[1];
+        } else {  // Es un inmediato
+            if (op[strlen(op) - 1] != ']') {
+                *tipo = 0;
+                *valor= anytoint(op, NULL);
+            } else {  //Falta el [ (ERROR)
+                *errorOp = 1;
+            }
+        }
+        if (cantOperandos == 2) {
+            if (*valor < -2048 || *valor > 2047) {  //-2048 a 2047
+                valorRealOP= *valor << 20;
+                valorRealOP = valorRealOP >> 20;
+                printf("\nAdvertencia EL VALOR EXCEDE EL LIMITE MAXIMO DE MEMORIA: linea: %i - Valor original: %d - Valor truncado a: %d \n", indice, *valor, valorRealOP);
+            }
+        } else if (cantOperandos == 1)
+            if (*valor < -32768 || *valor > 32767) {  // -32768 a 32767
+                valorRealOP = *valor<< 16;
+                valorRealOP = valorRealOP >> 16;
+                printf("\nAdvertencia EL VALOR EXCEDE EL LIMITE MAXIMO DE MEMORIA: linea: %i - Valor original: %d - Valor truncado a: %d \n", indice, *valor, valorRealOP);
+            }
+    }
 }
