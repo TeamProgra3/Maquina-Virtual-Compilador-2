@@ -3,15 +3,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "funciones.h"
-#include "operaciones.h"
 #define DIM_ROTULO 10
 #define DIM_COMANDO 40
 #define DIM_DIRECCIONES 50
 #define DIM_COMENTARIO 100
 #define DIM_LINEACOMANDO 200
 #define CANT_CELDAS 4096
-
+#define DIM_OPERACIONES 25
+#define DIM_OPERACION 5
+typedef struct{
+    char inst[DIM_OPERACION];
+    int codigo;
+    int operandos;
+}instruccion;
 typedef struct  //structura que maneja la salida por consola de lo que va haciendo el traductor
 {
     int codigo;
