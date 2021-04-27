@@ -350,8 +350,8 @@ MigrationBackup/
 .ionide/
 
 
-.txt
-.bat
-.asm
-.cbp
-.depend
+*.txt
+*.bat
+*.asm
+*.cbp
+*.depend

@@ -163,7 +163,7 @@ void muestra(Linea v[DIM_LINEACOMANDO], int cant) {
                 linea.codigo = 9999;
                 strcpy(linea.rotulo, "----");
             }
-            printf("[%04i]: [%02X %02X %02X %02X] | %4s | %s %s", linea.codigo, (linea.hexa >> 24) & 0xFF, (linea.hexa >> 16) & 0xFF, (linea.hexa >> 8) & 0xFF, (linea.hexa >> 0) & 0xFF, linea.rotulo, linea.comando, linea.comentario);
+            printf("[%04i]: [%02X %02X %02X %02X] | %8s | %s %s", linea.codigo, (linea.hexa >> 24) & 0xFF, (linea.hexa >> 16) & 0xFF, (linea.hexa >> 8) & 0xFF, (linea.hexa >> 0) & 0xFF, linea.rotulo, linea.comando, linea.comentario);
         }
         printf("\n");
     }
