@@ -442,5 +442,5 @@ void ArmaOperando(char op[DIM_COMANDO],int cantOperandos,int indice,int *valor,i
 }
 
 void magia(){
-    printf("-----------------------VERSION 1.2------------------------");
+    printf("-----------------------VERSION 1.2------------------------\n");
 }
