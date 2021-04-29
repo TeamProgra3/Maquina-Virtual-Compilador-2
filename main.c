@@ -28,6 +28,7 @@ typedef struct {
     char rotulo[DIM_ROTULO];
     int posicion;
 } Rotulos;
+
 void magia();
 void leeArchivo(Linea v[DIM_LINEACOMANDO], int *cant, char[]);                               //lee del archivo asembler y lo traduce al binario
 void creaComando(char comando[DIM_COMANDO], char comentario[DIM_COMENTARIO], Linea *linea);  //Obvio que crea el comando jaja
@@ -44,12 +45,15 @@ void CorrigeBlancos(char cadena[DIM_COMANDO]);
 int anytoint(char *s, char **out);
 int ComandoValido(char comando[DIM_COMANDO], instruccion ins[DIM_OPERACIONES]);
 void cargaInstrucciones(instruccion ins[DIM_OPERACIONES]);
+int traduceHeader(char[]); //funcion interna en crea heder que traduce una vez recuperado el header
+void creaHeader(int Header[],char[]);//en el char va el nombre del archivo (El Header puede estar en cualquier parte del codigo) para poder leer el header
 
 int main(int argsCant, char *arg[])  //argsCant es cantidad de argumentos
 {
     int errorSintaxis = 0, cant = 0;
     Linea Lineas[DIM_LINEACOMANDO];
     instruccion instrucciones[DIM_OPERACIONES];
+    int Header[5];
     cargaInstrucciones(instrucciones);
     magia();
     if (argsCant >= 3) {
