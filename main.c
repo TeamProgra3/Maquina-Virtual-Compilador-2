@@ -45,7 +45,7 @@ void CorrigeBlancos(char cadena[DIM_COMANDO]);
 int anytoint(char *s, char **out);
 int ComandoValido(char comando[DIM_COMANDO], instruccion ins[DIM_OPERACIONES]);
 void cargaInstrucciones(instruccion ins[DIM_OPERACIONES]);
-
+int tieneHeader(char comando[DIM_COMANDO]);
 void creaHeader(int Header[],char * comando);//en el char va el nombre del archivo (El Header puede estar en cualquier parte del codigo) para poder leer el header
 
 int main(int argsCant, char *arg[])  //argsCant es cantidad de argumentos
@@ -100,7 +100,7 @@ void leeArchivo(Linea v[DIM_LINEACOMANDO],int Header[], int *cant, char ArchFuen
         }
         comentario[i] = '\0';
         i = 0;
-        if(comando[0]!='\\' ){
+        if(tieneHeader(comando) ){
             creaComando(comando, comentario, &v[*cant]);
             (*cant)++;
         }else
