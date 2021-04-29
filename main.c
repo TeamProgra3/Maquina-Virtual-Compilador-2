@@ -461,6 +461,8 @@ void creaHeader(int Header[],char * comando)//en el char va el nombre del archiv
     char aux[DIM_COMANDO],valor[DIM_COMANDO];  
     int i = 0,j=0;
     int pos,hexa;
+    while(comando[i]!=" "&&comando[i]!='    ')
+        i++;
     while(comando[i]!='\0'){
         if(comando[i]!="=")
             aux[i++]=comando[i];
