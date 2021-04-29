@@ -30,12 +30,12 @@ typedef struct {
 } Rotulos;
 
 void magia();
-void leeArchivo(Linea v[DIM_LINEACOMANDO], int *cant, char[]);                               //lee del archivo asembler y lo traduce al binario
+void leeArchivo(Linea v[DIM_LINEACOMANDO],int Header[], int *cant, char[]);                               //lee del archivo asembler y lo traduce al binario
 void creaComando(char comando[DIM_COMANDO], char comentario[DIM_COMENTARIO], Linea *linea);  //Obvio que crea el comando jaja
 void corrigeComando(char comando[DIM_COMANDO], Linea *linea);                                //corrige el comando, es decir se fija si tiene un rotulo prefijado o no
 void muestra(Linea v[DIM_LINEACOMANDO], int cant);
-void compilaCodigo(Linea v[DIM_LINEACOMANDO], int cant, instruccion ins[DIM_OPERACIONES], char[], int *);
-void creaBinario(Linea linea[DIM_LINEACOMANDO], int cantOperaciones, char nombreArch[]);
+void compilaCodigo(Linea v[DIM_LINEACOMANDO],int Header[], int cant, instruccion ins[DIM_OPERACIONES], char[], int *);
+void creaBinario(Linea linea[DIM_LINEACOMANDO],int Header[], int cantOperaciones, char nombreArch[]);
 void RecuperaInstruccion(Linea LineaActual, char instruccionActual[DIM_COMANDO], Rotulos rotulos[], int cant, char op1[], char op2[]);
 long ArmaCodigo(int, int, char op1[], char op2[], int *, int i);
 void ArmaOperando(char op[DIM_COMANDO],int cantOperandos,int indice,int *valor,int* errorOp,int *tipo);
@@ -45,8 +45,8 @@ void CorrigeBlancos(char cadena[DIM_COMANDO]);
 int anytoint(char *s, char **out);
 int ComandoValido(char comando[DIM_COMANDO], instruccion ins[DIM_OPERACIONES]);
 void cargaInstrucciones(instruccion ins[DIM_OPERACIONES]);
-int traduceHeader(char[]); //funcion interna en crea heder que traduce una vez recuperado el header
-void creaHeader(int Header[],char[]);//en el char va el nombre del archivo (El Header puede estar en cualquier parte del codigo) para poder leer el header
+
+void creaHeader(int Header[],char * comando);//en el char va el nombre del archivo (El Header puede estar en cualquier parte del codigo) para poder leer el header
 
 int main(int argsCant, char *arg[])  //argsCant es cantidad de argumentos
 {
@@ -57,8 +57,8 @@ int main(int argsCant, char *arg[])  //argsCant es cantidad de argumentos
     cargaInstrucciones(instrucciones);
     magia();
     if (argsCant >= 3) {
-        leeArchivo(Lineas, &cant, arg[1]);
-        compilaCodigo(Lineas, cant, instrucciones, arg[2], &errorSintaxis);  //arg[1] archivo assembler y arg[2] es nombre archivo salida .bin
+        leeArchivo(Lineas,Header, &cant, arg[1]);
+        compilaCodigo(Lineas,Header, cant, instrucciones, arg[2], &errorSintaxis);  //arg[1] archivo assembler y arg[2] es nombre archivo salida .bin
         if (errorSintaxis)
             printf("\n ERROR EN LA COMPILACION: Error de sintaxis en la instruccion nro: %d \n\n", errorSintaxis+1);
         else
@@ -78,7 +78,7 @@ int main(int argsCant, char *arg[])  //argsCant es cantidad de argumentos
             printf("\nCompilacion exitosa, no se detectaron errores de sintaxis\n\n");
     return 0;
 }
-void leeArchivo(Linea v[DIM_LINEACOMANDO], int *cant, char ArchFuente[40]) {
+void leeArchivo(Linea v[DIM_LINEACOMANDO],int Header[], int *cant, char ArchFuente[40]) {
     int i = 0;                        //posicion del caracter en la palabra (aclaracion: esto solo se utiliza en el codigo y no en las aclaraciones\comentarios)
     char caracter;                    //para leer un unico caracter del archivo
     char comando[DIM_COMANDO];        //variable que se utiliza para almacenar el comando
@@ -100,8 +100,11 @@ void leeArchivo(Linea v[DIM_LINEACOMANDO], int *cant, char ArchFuente[40]) {
         }
         comentario[i] = '\0';
         i = 0;
-        creaComando(comando, comentario, &v[*cant]);
-        (*cant)++;
+        if(comando[0]!='\\' ){
+            creaComando(comando, comentario, &v[*cant]);
+            (*cant)++;
+        }else
+            creaHeader(Header,comando);
         comando[0] = '\0';
         comentario[0] = '\0';
         fscanf(arch, "%c", &caracter);
@@ -172,7 +175,7 @@ void muestra(Linea v[DIM_LINEACOMANDO], int cant) {
         printf("\n");
     }
 }
-void compilaCodigo(Linea linea[DIM_LINEACOMANDO], int cant, instruccion instrucciones[DIM_OPERACIONES], char nombreArch[40], int *error) {
+void compilaCodigo(Linea linea[DIM_LINEACOMANDO],int Header[], int cant, instruccion instrucciones[DIM_OPERACIONES], char nombreArch[40], int *error) {
     int errorOperando, i, cantRotulos = 0, cantOpsValidas = 0;
     long codOp;
     char op1[DIM_COMANDO] = {'\0'};
@@ -217,7 +220,7 @@ void compilaCodigo(Linea linea[DIM_LINEACOMANDO], int cant, instruccion instrucc
         }
     }
     if (!(*error))
-        creaBinario(linea, cant, nombreArch);
+        creaBinario(linea,Header, cant, nombreArch);
 }
 void RecuperaInstruccion(Linea LineaActual, char instruccionActual[DIM_COMANDO], Rotulos rotulos[CANT_CELDAS], int cantRotulos, char op1[DIM_COMANDO], char op2[DIM_COMANDO]) {
     int pos, j, i = 0;
@@ -277,10 +280,12 @@ long ArmaCodigo(int codigo, int cantOperandos, char op1[DIM_COMANDO], char op2[D
         codAux = codigo << 20;
     return codAux;
 }
-void creaBinario(Linea linea[DIM_LINEACOMANDO], int cantidadOperaciones, char nombreArch[]) {
+void creaBinario(Linea linea[DIM_LINEACOMANDO],int Header[], int cantidadOperaciones, char nombreArch[]) {
     int i;
     FILE *archivoSalida;
     archivoSalida = fopen(nombreArch, "wb");
+    for (i=0;i<5; i++)
+        fwrite(&Header[i],sizeof(Header[i]),1,archivoSalida);
     for (i = 0; i < cantidadOperaciones; i++)
         if (linea[i].codigo != -1)  //Si no es un solo comentario
             fwrite(&linea[i].hexa, sizeof(linea[i].hexa), 1, archivoSalida);
@@ -445,6 +450,35 @@ void ArmaOperando(char op[DIM_COMANDO],int cantOperandos,int indice,int *valor,i
     }
 }
 
+
+void recuperaSegmento(int *pos,int *hexa,char aux[DIM_COMANDO],char valor[DIM_COMANDO]){
+        //halta hacer la magia aca uwu
+
+}
+
+void creaHeader(int Header[],char * comando)//en el char va el nombre del archivo (El Header puede estar en cualquier parte del codigo) para poder leer el header
+{   
+    char aux[DIM_COMANDO],valor[DIM_COMANDO];  
+    int i = 0,j=0;
+    int pos,hexa;
+    while(comando[i]!='\0'){
+        if(comando[i]!="=")
+            aux[i++]=comando[i];
+        else{
+            i++;
+            while(comando[i] != '\0' && comando[i]!=" "&& comando[i]!=" ")
+                valor[j++]=comando[i++];
+            recuperaSegmento(&pos,&hexa,aux,valor);
+            Header[pos]=hexa;
+        }
+    }
+    Header[0]=0x4D563231;
+
+}
+
+
 void magia(){
-    printf("-----------------------VERSION 1.2------------------------\n");
+    printf("-----------------------VERSION 1.3------------------------\n");
+    printf("-----------------Cazorla a las 3 AM-----------------------\n");
+    printf("------------Falta crear una funcion y testing-------------\n");
 }
