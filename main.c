@@ -11,11 +11,19 @@
 #define CANT_CELDAS 4096
 #define DIM_OPERACIONES 25
 #define DIM_OPERACION 5
+#define DIM_PARAMETROS 10
 typedef struct {
     char inst[DIM_OPERACION];
     int codigo;
     int operandos;
 } instruccion;
+typedef struct
+{
+    char parametro[DIM_PARAMETROS];
+    int codigo;
+}ParametrosHeader;
+
+
 typedef struct  //structura que maneja la salida por consola de lo que va haciendo el traductor
 {
     int codigo;
@@ -30,7 +38,7 @@ typedef struct {
 } Rotulos;
 
 void magia();
-void leeArchivo(Linea v[DIM_LINEACOMANDO], int Header[], int *cant, char[]);                 //lee del archivo asembler y lo traduce al binario
+void leeArchivo(Linea v[DIM_LINEACOMANDO], ParametrosHeader v2[5],int Header[], int *cant, char[]);                 //lee del archivo asembler y lo traduce al binario
 void creaComando(char comando[DIM_COMANDO], char comentario[DIM_COMENTARIO], Linea *linea);  //Obvio que crea el comando jaja
 void corrigeComando(char comando[DIM_COMANDO], Linea *linea);                                //corrige el comando, es decir se fija si tiene un rotulo prefijado o no
 void muestra(Linea v[DIM_LINEACOMANDO], int cant);
@@ -46,7 +54,7 @@ int anytoint(char *s, char **out);
 int ComandoValido(char comando[DIM_COMANDO], instruccion ins[DIM_OPERACIONES]);
 void cargaInstrucciones(instruccion ins[DIM_OPERACIONES]);
 int tieneHeader(char comando[DIM_COMANDO]);
-void creaHeader(int Header[], char *comando);  //en el char va el nombre del archivo (El Header puede estar en cualquier parte del codigo) para poder leer el header
+void creaHeader(ParametrosHeader v2[5],int Header[], char *comando) ; //en el char va el nombre del archivo (El Header puede estar en cualquier parte del codigo) para poder leer el header
 
 int main(int argsCant, char *arg[])  //argsCant es cantidad de argumentos
 {
@@ -54,10 +62,12 @@ int main(int argsCant, char *arg[])  //argsCant es cantidad de argumentos
     Linea Lineas[DIM_LINEACOMANDO];
     instruccion instrucciones[DIM_OPERACIONES];
     int Header[5];
+    ParametrosHeader parHeader[5];
     cargaInstrucciones(instrucciones);
+    cargaParametrosHeader(parHeader);
     magia();
     if (argsCant >= 3) {
-        leeArchivo(Lineas, Header, &cant, arg[1]);
+        leeArchivo(Lineas,parHeader, Header, &cant, arg[1]);
         compilaCodigo(Lineas, Header, cant, instrucciones, arg[2], &errorSintaxis);  //arg[1] archivo assembler y arg[2] es nombre archivo salida .bin
         if (errorSintaxis)
             printf("\n ERROR EN LA COMPILACION: Error de sintaxis en la instruccion nro: %d \n\n", errorSintaxis + 1);
@@ -78,7 +88,7 @@ int main(int argsCant, char *arg[])  //argsCant es cantidad de argumentos
         printf("\nCompilacion exitosa, no se detectaron errores de sintaxis\n\n");
     return 0;
 }
-void leeArchivo(Linea v[DIM_LINEACOMANDO], int Header[], int *cant, char ArchFuente[40]) {
+void leeArchivo(Linea v[DIM_LINEACOMANDO],ParametrosHeader v2[5],int Header[], int *cant, char ArchFuente[40]) {
     int i = 0;                        //posicion del caracter en la palabra (aclaracion: esto solo se utiliza en el codigo y no en las aclaraciones\comentarios)
     char caracter;                    //para leer un unico caracter del archivo
     char comando[DIM_COMANDO];        //variable que se utiliza para almacenar el comando
@@ -104,7 +114,7 @@ void leeArchivo(Linea v[DIM_LINEACOMANDO], int Header[], int *cant, char ArchFue
             creaComando(comando, comentario, &v[*cant]);
             (*cant)++;
         } else
-            creaHeader(Header, comando);
+            creaHeader(v2,Header, comando);
         comando[0] = '\0';
         comentario[0] = '\0';
         fscanf(arch, "%c", &caracter);
@@ -341,6 +351,8 @@ int ComandoValido(char comando[DIM_COMANDO], instruccion instrucciones[DIM_OPERA
         i++;
     return (i < DIM_OPERACIONES ? i : -1);  //Devuelve la posicion del comando
 }
+
+
 void cargaInstrucciones(instruccion ins[DIM_OPERACIONES]) {
     //2 operandos
     strcpy(ins[0].inst, "MOV");
@@ -450,11 +462,23 @@ void ArmaOperando(char op[DIM_COMANDO], int cantOperandos, int indice, int *valo
     }
 }
 
-void recuperaSegmento(int *pos, int *hexa, char aux[DIM_COMANDO], char valor[DIM_COMANDO]) {
+void cargaParametrosHeader(ParametrosHeader parametrosHeader[DIM_PARAMETROS]){
+    strcpy(parametrosHeader[0].parametro,'\0');
+    parametrosHeader[0].codigo=0x4D563231;
+    strcpy(parametrosHeader[1].parametro,"DATA");
+    strcpy(parametrosHeader[2].parametro,"STACK");
+    strcpy(parametrosHeader[3].parametro,"EXTRA");
+    strcpy(parametrosHeader[4].parametro,'\0');
+
+    for(int i=1;i<3;i++)
+        parametrosHeader[i].codigo=0x400;
+    
+}
+void recuperaSegmento(int *pos, int *hexa, char aux[DIM_COMANDO], char valor[DIM_COMANDO],ParametrosHeader v2[5]) {
     //halta hacer la magia aca uwu
 }
 
-void creaHeader(int Header[], char *comando)  //en el char va el nombre del archivo (El Header puede estar en cualquier parte del codigo) para poder leer el header
+void creaHeader(ParametrosHeader v2[5],int Header[], char *comando)  //en el char va el nombre del archivo (El Header puede estar en cualquier parte del codigo) para poder leer el header
 {
     char aux[DIM_COMANDO], valor[DIM_COMANDO];
     int i = 0, j = 0;
@@ -468,7 +492,7 @@ void creaHeader(int Header[], char *comando)  //en el char va el nombre del arch
             i++;
             while (comando[i] != '\0' && comando[i] != " " && comando[i] != " ")
                 valor[j++] = comando[i++];
-            recuperaSegmento(&pos, &hexa, aux, valor);
+            recuperaSegmento(&pos, &hexa, aux, valor,v2);
             Header[pos] = hexa;
         }
     }
