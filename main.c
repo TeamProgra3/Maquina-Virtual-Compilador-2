@@ -100,7 +100,7 @@ void leeArchivo(Linea v[DIM_LINEACOMANDO],int Header[], int *cant, char ArchFuen
         }
         comentario[i] = '\0';
         i = 0;
-        if(tieneHeader(comando) ){
+        if(!tieneHeader(comando) ){
             creaComando(comando, comentario, &v[*cant]);
             (*cant)++;
         }else
@@ -478,7 +478,13 @@ void creaHeader(int Header[],char * comando)//en el char va el nombre del archiv
 
 }
 
-
+int tieneHeader(char comando[DIM_COMANDO]){
+    int i=0;
+    while(comando[i]!= "\\\\" && comando[i]!='\0')
+        i++;
+    if (comando[i]== "\\\\") return 1;
+    return 0;
+}
 void magia(){
     printf("-----------------------VERSION 1.3------------------------\n");
     printf("-----------------Cazorla a las 3 AM-----------------------\n");
