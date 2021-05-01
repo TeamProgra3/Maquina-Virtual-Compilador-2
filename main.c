@@ -329,7 +329,7 @@ void CorrigeBlancos(char cadena[DIM_COMANDO]) {
     strcpy(cadena, aux);
     if (cadena[strlen(aux) - 1] == ' ' || cadena[strlen(aux) - 1] == '	') {
         i = strlen(aux) - 1;
-        while (cadena[i] == ' ' || cadena[i] == '	') {
+        while ((cadena[i] == ' ' || cadena[i] == '	') && (int)cadena[i-1] != 39) {
             cadena[i] = '\0';
             i--;
         }
@@ -483,14 +483,14 @@ void creaHeader(ParametrosHeader v2[5],int Header[], char *comando)  //en el cha
     char aux[DIM_COMANDO], valor[DIM_COMANDO];
     int i = 0, j = 0;
     int pos, hexa;
-    while (comando[i] != " " && comando[i] != '    ')
+    while (comando[i] != ' ' && comando[i] != '	')
         i++;
     while (comando[i] != '\0') {
-        if (comando[i] != "=")
+        if (comando[i] != '=')
             aux[i++] = comando[i];
         else {
             i++;
-            while (comando[i] != '\0' && comando[i] != " " && comando[i] != " ")
+            while (comando[i] != '\0' && comando[i] != ' ' && comando[i] != '	')
                 valor[j++] = comando[i++];
             recuperaSegmento(&pos, &hexa, aux, valor,v2);
             Header[pos] = hexa;
@@ -501,9 +501,9 @@ void creaHeader(ParametrosHeader v2[5],int Header[], char *comando)  //en el cha
 
 int tieneHeader(char comando[DIM_COMANDO]) {
     int i = 0;
-    while (comando[i] != "\\" && comando[i] != '\0')
+    while (comando[i] != '\\' && comando[i] != '\0')
         i++;
-    return comando[i + 1] == "\\";
+    return comando[i + 1] == '\\';
 }
 void magia() {
     printf("-----------------------VERSION 1.31------------------------\n");
