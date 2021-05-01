@@ -379,40 +379,57 @@ void cargaInstrucciones(instruccion ins[DIM_OPERACIONES]) {
     ins[10].codigo = 0xA;
     strcpy(ins[11].inst, "XOR");
     ins[11].codigo = 0xB;
-    for (int i = 0; i <= 11; i++)
+    strcpy(ins[12].inst, "SLEN");
+    ins[12].codigo = 0xC;
+    strcpy(ins[13].inst, "SMOV");
+    ins[13].codigo = 0xD;
+    strcpy(ins[14].inst, "SCMP");
+    ins[14].codigo = 0xE;
+    for (int i = 0; i <= 14; i++)
         ins[i].operandos = 2;
     //1 operando
-    strcpy(ins[12].inst, "SYS");
-    ins[12].codigo = 0xF0;
-    strcpy(ins[13].inst, "JMP");
-    ins[13].codigo = 0xF1;
-    strcpy(ins[14].inst, "JZ");
-    ins[14].codigo = 0xF2;
-    strcpy(ins[15].inst, "JP");
-    ins[15].codigo = 0xF3;
-    strcpy(ins[16].inst, "JN");
-    ins[16].codigo = 0xF4;
-    strcpy(ins[17].inst, "JNZ");
-    ins[17].codigo = 0xF5;
-    strcpy(ins[18].inst, "JNP");
-    ins[18].codigo = 0xF6;
-    strcpy(ins[19].inst, "JNN");
-    ins[19].codigo = 0xF7;
-    strcpy(ins[20].inst, "LDL");
-    ins[20].codigo = 0xF8;
-    strcpy(ins[21].inst, "LDH");
-    ins[21].codigo = 0xF9;
-    strcpy(ins[22].inst, "RND");
-    ins[22].codigo = 0xFA;
-    strcpy(ins[23].inst, "NOT");
-    ins[23].codigo = 0xFB;
-    for (int i = 12; i <= 23; i++)
+    strcpy(ins[15].inst, "SYS");
+    ins[15].codigo = 0xF0;
+    strcpy(ins[16].inst, "JMP");
+    ins[16].codigo = 0xF1;
+    strcpy(ins[17].inst, "JZ");
+    ins[17].codigo = 0xF2;
+    strcpy(ins[18].inst, "JP");
+    ins[18].codigo = 0xF3;
+    strcpy(ins[19].inst, "JN");
+    ins[19].codigo = 0xF4;
+    strcpy(ins[20].inst, "JNZ");
+    ins[20].codigo = 0xF5;
+    strcpy(ins[21].inst, "JNP");
+    ins[21].codigo = 0xF6;
+    strcpy(ins[22].inst, "JNN");
+    ins[22].codigo = 0xF7;
+    strcpy(ins[23].inst, "LDL");
+    ins[23].codigo = 0xF8;
+    strcpy(ins[24].inst, "LDH");
+    ins[24].codigo = 0xF9;
+    strcpy(ins[25].inst, "RND");
+    ins[25].codigo = 0xFA;
+    strcpy(ins[26].inst, "NOT");
+    ins[26].codigo = 0xFB;
+    strcpy(ins[27].inst, "PUSH");
+    ins[27].codigo = 0xFC;
+    strcpy(ins[28].inst, "POP");
+    ins[28].codigo = 0xFD;
+    strcpy(ins[29].inst, "CALL");
+    ins[29].codigo = 0xFE;
+
+    for (int i = 15; i <= 29; i++)
         ins[i].operandos = 1;
 
     //0 operandos
-    strcpy(ins[24].inst, "STOP");
-    ins[24].codigo = 0xFF1;
-    ins[24].operandos = 0;
+    strcpy(ins[30].inst, "RET");
+    ins[30].codigo = 0xFF0;
+    ins[30].operandos = 0;
+
+    strcpy(ins[31].inst, "STOP");
+    ins[31].codigo = 0xFF1;
+    ins[31].operandos = 0;
 }
 void ArmaOperando(char op[DIM_COMANDO], int cantOperandos, int indice, int *valor, int *errorOp, int *tipo) {
     char aux[DIM_COMANDO] = {0};
