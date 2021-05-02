@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define DIM_ROTULO 10
-#define DIM_COMANDO 40
+#define DIM_ROTULO 20
+#define DIM_COMANDO 60
 #define DIM_DIRECCIONES 50
 #define DIM_COMENTARIO 100
 #define DIM_LINEACOMANDO 200
@@ -221,6 +221,7 @@ void compilaCodigo(Linea linea[DIM_LINEACOMANDO], int Header[], int cant, instru
                     aux[k] = linea[i].comando[k];
                     k++;
                 }
+                aux[k] = '\0';
                 VerificaDuplicado(aux, simbolos, cantRotulos, &duplicado);
                 if (!duplicado) {
                     CargaConstanteEQU(linea[i].comando, simbolos, cantRotulos);
@@ -229,8 +230,8 @@ void compilaCodigo(Linea linea[DIM_LINEACOMANDO], int Header[], int cant, instru
                     printf("ERROR! El simbolo %s es un duplicado! %d \nFue declarado nuevamente en la linea: %d\n", aux, i + 1);
                     *error = i;
                 }
-            }
-            cantOpsValidas++;
+            } else
+                cantOpsValidas++;
         }
     }
     cantOpsValidas = 0;
@@ -535,7 +536,12 @@ void CargaConstanteEQU(char comando[DIM_COMANDO], Simbolos simbolos[CANT_CELDAS]
         aux[i] = comando[i];
         i++;
     }
-    i += 4;  //Saltea la palabra EQU
+    aux[i] = '\0';
+    while (toupper(comando[i]) != 'U')  //Saltea la palabra EQU
+        i++;
+    i++;
+    while (comando[i] == ' ' || comando[i] == '	')
+        i++;
 
     //VERIFICAR ACA SI VIENE TEXTO O NUMERO (Pendiente)
     j = 0;
@@ -544,6 +550,7 @@ void CargaConstanteEQU(char comando[DIM_COMANDO], Simbolos simbolos[CANT_CELDAS]
         i++;
         j++;
     }
+    valorConstante[j] = '\0';
     int valorInt = anytoint(valorConstante, NULL);
     strcpy(simbolos[posActual].rotulo, aux);
     simbolos[posActual].valor = valorInt;
