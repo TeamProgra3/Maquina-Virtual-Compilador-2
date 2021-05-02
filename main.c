@@ -34,6 +34,8 @@ typedef struct  //structura que maneja la salida por consola de lo que va hacien
 typedef struct {
     char rotulo[DIM_ROTULO];
     int valor;
+    int esCadena;  //booleano
+    char cadena[DIM_COMANDO];
 } Simbolos;
 
 void magia();
@@ -42,7 +44,7 @@ void creaComando(char comando[DIM_COMANDO], char comentario[DIM_COMENTARIO], Lin
 void corrigeComando(char comando[DIM_COMANDO], Linea *linea);                                         //corrige el comando, es decir se fija si tiene un rotulo prefijado o no
 void muestra(Linea v[DIM_LINEACOMANDO], int cant);
 void compilaCodigo(Linea v[DIM_LINEACOMANDO], int Header[], int cant, instruccion ins[DIM_OPERACIONES], char[], int *);
-void creaBinario(Linea linea[DIM_LINEACOMANDO], int Header[], int cantOperaciones, char nombreArch[]);
+void creaBinario(Linea linea[DIM_LINEACOMANDO], int Header[], Simbolos rotulos[], int, int cantOperaciones, char nombreArch[]);
 void RecuperaInstruccion(Linea LineaActual, char instruccionActual[DIM_COMANDO], Simbolos simbolos[], int cant, char op1[], char op2[]);
 long ArmaCodigo(int, int, char op1[], char op2[], int *, int i);
 void ArmaOperando(char op[DIM_COMANDO], int cantOperandos, int indice, int *valor, int *errorOp, int *tipo);
@@ -210,6 +212,7 @@ void compilaCodigo(Linea linea[DIM_LINEACOMANDO], int Header[], int cant, instru
                 if (!duplicado) {
                     strcpy(simbolos[cantRotulos].rotulo, linea[i].rotulo);
                     simbolos[cantRotulos].valor = cantOpsValidas;
+                    simbolos[cantRotulos].esCadena = 0;
                     cantRotulos++;
                 } else {
                     printf("ERROR! El simbolo %s es un duplicado! \nFue declarado nuevamente en la linea: %d\n", linea[i].rotulo, i + 1);
@@ -234,6 +237,13 @@ void compilaCodigo(Linea linea[DIM_LINEACOMANDO], int Header[], int cant, instru
                 cantOpsValidas++;
         }
     }
+    for (i = 0; i < cantRotulos; i++) {
+        if (simbolos[i].esCadena == 1) {
+            simbolos[i].valor = cantOpsValidas;
+            cantOpsValidas = cantOpsValidas + strlen(simbolos[i].cadena) + 1;
+        }
+    }
+
     cantOpsValidas = 0;
     for (i = 0; i < cant; i++) {  //Analiza todas las instrucciones
         if (linea[i].codigo != -1 && linea[i].codigo != -2) {
@@ -261,7 +271,7 @@ void compilaCodigo(Linea linea[DIM_LINEACOMANDO], int Header[], int cant, instru
         }
     }
     if (!(*error))
-        creaBinario(linea, Header, cant, nombreArch);
+        creaBinario(linea, Header, simbolos, cantRotulos, cant, nombreArch);
 }
 void RecuperaInstruccion(Linea LineaActual, char instruccionActual[DIM_COMANDO], Simbolos simbolos[CANT_CELDAS], int cantRotulos, char op1[DIM_COMANDO], char op2[DIM_COMANDO]) {
     int pos, j, i = 0;
@@ -330,15 +340,25 @@ long ArmaCodigo(int codigo, int cantOperandos, char op1[DIM_COMANDO], char op2[D
         codAux = codigo << 20;
     return codAux;
 }
-void creaBinario(Linea linea[DIM_LINEACOMANDO], int Header[], int cantidadOperaciones, char nombreArch[]) {
-    int i;
+void creaBinario(Linea linea[DIM_LINEACOMANDO], int Header[], Simbolos simbolos[CANT_CELDAS], int cantRotulos, int cantidadOperaciones, char nombreArch[]) {
+    int valorAscii,k,i;
     FILE *archivoSalida;
     archivoSalida = fopen(nombreArch, "wb");
     for (i = 0; i < 5; i++)
         fwrite(&Header[i], sizeof(Header[i]), 1, archivoSalida);
+
     for (i = 0; i < cantidadOperaciones; i++)
         if (linea[i].codigo != -1)  //Si no es un solo comentario
             fwrite(&linea[i].hexa, sizeof(linea[i].hexa), 1, archivoSalida);
+    for (i = 0; i < cantRotulos; i++){
+        if (simbolos[i].esCadena == 1)
+            for (k = 0; k <= strlen(simbolos[i].cadena);k++){
+                valorAscii = (int)simbolos[i].cadena[k];
+                fwrite(&valorAscii, sizeof(int), 1, archivoSalida);
+            }
+    }
+    
+
     fclose(archivoSalida);
 }
 int BuscaRotulo(char op1[], Simbolos simbolos[CANT_CELDAS], int cantRotulos) {
@@ -544,16 +564,31 @@ void CargaConstanteEQU(char comando[DIM_COMANDO], Simbolos simbolos[CANT_CELDAS]
         i++;
 
     //VERIFICAR ACA SI VIENE TEXTO O NUMERO (Pendiente)
-    j = 0;
-    while (comando[i] != '\0') {
-        valorConstante[j] = comando[i];
-        i++;
-        j++;
+    if (comando[i] != '"') {  //Es un numero
+        j = 0;
+        while (comando[i] != '\0') {
+            valorConstante[j] = comando[i];
+            i++;
+            j++;
+        }
+        valorConstante[j] = '\0';
+        int valorInt = anytoint(valorConstante, NULL);
+        strcpy(simbolos[posActual].rotulo, aux);
+        simbolos[posActual].valor = valorInt;
+        simbolos[posActual].esCadena = 0;
+    } else {  //Es una cadena de texto
+        j = 0;
+        i++;  //Saltea la primera "
+        while (comando[i] != '"') {
+            valorConstante[j] = comando[i];
+            i++;
+            j++;
+        }
+        valorConstante[j] = '\0';
+        simbolos[posActual].esCadena = 1;
+        strcpy(simbolos[posActual].rotulo, aux);
+        strcpy(simbolos[posActual].cadena, valorConstante);
     }
-    valorConstante[j] = '\0';
-    int valorInt = anytoint(valorConstante, NULL);
-    strcpy(simbolos[posActual].rotulo, aux);
-    simbolos[posActual].valor = valorInt;
 }
 
 void cargaParametrosHeader(ParametrosHeader parametrosHeader[DIM_PARAMETROS]) {
