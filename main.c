@@ -8,10 +8,11 @@
 #define DIM_DIRECCIONES 50
 #define DIM_COMENTARIO 100
 #define DIM_LINEACOMANDO 200
-#define CANT_CELDAS 4096
+#define CANT_CELDAS 8192
 #define DIM_OPERACIONES 25
 #define DIM_OPERACION 5
 #define DIM_PARAMETROS 10
+
 typedef struct {
     char inst[DIM_OPERACION];
     int codigo;
@@ -46,14 +47,15 @@ void muestra(Linea v[DIM_LINEACOMANDO], int cant);
 void compilaCodigo(Linea v[DIM_LINEACOMANDO], int Header[], int cant, instruccion ins[DIM_OPERACIONES], char[], int *);
 void creaBinario(Linea linea[DIM_LINEACOMANDO], int Header[], Simbolos rotulos[], int, int cantOperaciones, char nombreArch[]);
 void RecuperaInstruccion(Linea LineaActual, char instruccionActual[DIM_COMANDO], Simbolos simbolos[], int cant, char op1[], char op2[]);
-long ArmaCodigo(int, int, char op1[], char op2[], int *, int i);
-void ArmaOperando(char op[DIM_COMANDO], int cantOperandos, int indice, int *valor, int *errorOp, int *tipo);
+long ArmaCodigo(int, int, char op1[], char op2[],Simbolos simbolos[], int ,int *, int i);
+void ArmaOperando(char op[DIM_COMANDO], int cantOperandos, int indice, int *valor,Simbolos s[],int ,int *errorOp, int *tipo);
 int BuscaRotulo(char op1[], Simbolos simbolos[CANT_CELDAS], int cantRotulos);
 void VerificaDuplicado(char cadena[DIM_COMANDO], Simbolos simbolos[CANT_CELDAS], int n, int *duplicado);
 void BuscaComa(char[], int *error);
 void CorrigeBlancos(char cadena[DIM_COMANDO]);
 void CargaConstanteEQU(char comando[DIM_COMANDO], Simbolos s[], int posActual);
 int anytoint(char *s, char **out);
+int OperandoIndirecto(char[],Simbolos s[],int, int *);
 int ComandoValido(char comando[DIM_COMANDO], instruccion ins[DIM_OPERACIONES]);
 void cargaInstrucciones(instruccion ins[DIM_OPERACIONES]);
 int tieneHeader(char comando[DIM_COMANDO]);
@@ -99,7 +101,7 @@ void leeArchivo(Linea v[DIM_LINEACOMANDO], ParametrosHeader v2[5], int Header[],
     char comentario[DIM_COMENTARIO];  //Variable que almacena el comentario
     FILE *arch;
 
-    //arch = fopen("C:/Users/Augusto/Documents/Facultad/Arquitectura/MaquinaVirtual/Maquina-Virtual-Compilador-2/borar.txt", "rt");
+    //arch = fopen("C:/Users/Augusto/Documents/Facultad/Arquitectura/MaquinaVirtual/Maquina-Virtual-Compilador-2/prueba.txt", "rt");
     arch = fopen(ArchFuente, "rt");
     fscanf(arch, "%c", &caracter);
     while (!feof(arch)) {
@@ -251,7 +253,7 @@ void compilaCodigo(Linea linea[DIM_LINEACOMANDO], int Header[], int cant, instru
             pos = ComandoValido(instruccionActual, instrucciones);
             if (pos != -1) {
                 errorOperando = 0;
-                codOp = ArmaCodigo(instrucciones[pos].codigo, instrucciones[pos].operandos, op1, op2, &errorOperando, i + 1);
+                codOp = ArmaCodigo(instrucciones[pos].codigo, instrucciones[pos].operandos, op1, op2,simbolos,cantRotulos, &errorOperando, i + 1);
                 if (instrucciones[pos].operandos == 2)
                     BuscaComa(linea[i].comando, &errorOperando);
                 if (errorOperando == 0) {
@@ -325,13 +327,13 @@ void RecuperaInstruccion(Linea LineaActual, char instruccionActual[DIM_COMANDO],
         }
     }
 }
-long ArmaCodigo(int codigo, int cantOperandos, char op1[DIM_COMANDO], char op2[DIM_COMANDO], int *errorOp, int indice) {
+long ArmaCodigo(int codigo, int cantOperandos, char op1[DIM_COMANDO], char op2[DIM_COMANDO],Simbolos simbolos[CANT_CELDAS],int cantRotulos ,int *errorOp, int indice) {
     long codAux = 0;
     char aux2[DIM_COMANDO] = {0};
     int opA = 0, opB = 0;
     int tipoOp1 = 0, tipoOp2 = 0;
-    ArmaOperando(op1, cantOperandos, indice, &opA, errorOp, &tipoOp1);
-    ArmaOperando(op2, cantOperandos, indice, &opB, errorOp, &tipoOp2);
+    ArmaOperando(op1, cantOperandos, indice, &opA, simbolos,cantRotulos,errorOp, &tipoOp1);
+    ArmaOperando(op2, cantOperandos, indice, &opB, simbolos,cantRotulos,errorOp, &tipoOp2);
     if (cantOperandos == 2)
         codAux = codigo << 28 | ((tipoOp1 << 26) & 0xC000000) | ((tipoOp2 << 24) & 0x3000000) | ((opA << 12) & 0xFFF000) | (opB & 0xFFF);
     else if (cantOperandos == 1)
@@ -341,7 +343,7 @@ long ArmaCodigo(int codigo, int cantOperandos, char op1[DIM_COMANDO], char op2[D
     return codAux;
 }
 void creaBinario(Linea linea[DIM_LINEACOMANDO], int Header[], Simbolos simbolos[CANT_CELDAS], int cantRotulos, int cantidadOperaciones, char nombreArch[]) {
-    int valorAscii,k,i;
+    int valorAscii, k, i;
     FILE *archivoSalida;
     archivoSalida = fopen(nombreArch, "wb");
     for (i = 0; i < 5; i++)
@@ -350,14 +352,13 @@ void creaBinario(Linea linea[DIM_LINEACOMANDO], int Header[], Simbolos simbolos[
     for (i = 0; i < cantidadOperaciones; i++)
         if (linea[i].codigo != -1)  //Si no es un solo comentario
             fwrite(&linea[i].hexa, sizeof(linea[i].hexa), 1, archivoSalida);
-    for (i = 0; i < cantRotulos; i++){
+    for (i = 0; i < cantRotulos; i++) {
         if (simbolos[i].esCadena == 1)
-            for (k = 0; k <= strlen(simbolos[i].cadena);k++){
+            for (k = 0; k <= strlen(simbolos[i].cadena); k++) {
                 valorAscii = (int)simbolos[i].cadena[k];
                 fwrite(&valorAscii, sizeof(int), 1, archivoSalida);
             }
     }
-    
 
     fclose(archivoSalida);
 }
@@ -416,6 +417,77 @@ int anytoint(char *s, char **out) {
     }
     return strtol(s, out, base);
 }
+
+int OperandoIndirecto(char aux[DIM_COMANDO],Simbolos simbolos[CANT_CELDAS], int cantRotulos ,int *error) {
+    char offsetString[20], registros[16][3];
+    int resta = 0, offset, i, j, codigo = 0;
+    char regActual[3];
+    strcpy(registros[0], "DS");
+    strcpy(registros[1], "SS");
+    strcpy(registros[2], "ES");
+    strcpy(registros[3], "CS");
+    strcpy(registros[4], "HP");
+    strcpy(registros[5], "IP");
+    strcpy(registros[6], "SP");
+    strcpy(registros[7], "BP");
+    strcpy(registros[8], "CC");
+    strcpy(registros[9], "AC");
+    strcpy(registros[10], "AX");
+    strcpy(registros[11], "BX");
+    strcpy(registros[12], "CX");
+    strcpy(registros[13], "DX");
+    strcpy(registros[14], "EX");
+    strcpy(registros[15], "FX");
+
+    //Separar en partes el aux, primer buscar registro y luego offset
+    regActual[0] = aux[0];
+    regActual[1] = aux[1];
+    regActual[2] = '\0';
+    i = 0;
+    while (i <= 15 && strcmp(registros[i], regActual) != 0) {
+        i++;
+    }
+    if (i == 16) {
+        *error = 1;
+        return -1;
+    } else {
+        codigo = i;  //Codigo del registro que buscaba
+        //Busca offset
+        i = 0;
+        while (aux[i] != '\0' && aux[i] != '+' && aux[i] != '-')
+            i++;
+        if (aux[i] == '\0')  //No hay offset
+            offset = 0;
+        else {
+            resta = aux[i] != '+';  //Resta tiene 1 si el offset es una resta, y cero si es una suma
+            i++;
+            j = 0;
+            while (aux[i] != '\0') {  //Recupera todo lo que haya despues del + o -
+                offsetString[j] = aux[i];
+                i++;
+                j++;
+            }
+           
+            offsetString[j + 1] = '\0';
+            if (offsetString[0] >= '0' && offsetString[0] <= '9')
+                offset = anytoint(offsetString, NULL); //No es una constante (Es un numero entero)
+            else{
+                int pos = BuscaRotulo(offsetString,simbolos,cantRotulos);
+                if (pos != -1) //Existe el rótulo?
+                    offset = pos; 
+                else {
+                    printf("\nERROR DE ROTULO NO ENCONTRADO: Rotulo: %s\n", offsetString);
+                    *error = 1;
+                    offset = 0;
+                }
+            }
+           if (resta)
+                offset *= -1;  //cambia signo
+        }
+        return ((offset & 0xFF) << 4 | codigo);
+    }
+}
+
 int ComandoValido(char comando[DIM_COMANDO], instruccion instrucciones[DIM_OPERACIONES]) {  //Verifica si existe la instruccion
     int i = 0;
     while (i < DIM_OPERACIONES && strcmp(comando, instrucciones[i].inst) != 0)
@@ -501,7 +573,7 @@ void cargaInstrucciones(instruccion ins[DIM_OPERACIONES]) {
     ins[31].codigo = 0xFF1;
     ins[31].operandos = 0;
 }
-void ArmaOperando(char op[DIM_COMANDO], int cantOperandos, int indice, int *valor, int *errorOp, int *tipo) {
+void ArmaOperando(char op[DIM_COMANDO], int cantOperandos, int indice, int *valor,Simbolos simbolos[CANT_CELDAS],int cantRotulos ,int *errorOp, int *tipo) {
     char aux[DIM_COMANDO] = {0};
     int valorRealOP;
     int i;
@@ -512,12 +584,16 @@ void ArmaOperando(char op[DIM_COMANDO], int cantOperandos, int indice, int *valo
                 aux[i - 1] = op[i];
                 i++;
             }
-            if (op[i] != '\0') {
+            if (op[i] != '\0' && (aux[0] >= '0' && aux[0] <= '9')) {
                 aux[i] = '\0';
                 *valor = anytoint(aux, NULL);
                 *tipo = 2;
+            } else if (op[i] != '\0' && (aux[0] >= 'A' && aux[0] <= 'F' || aux[0] == 'H' || aux[0] == 'I' || aux[0] == 'S')) {
+                aux[i] = '\0';
+                *tipo = 3;
+                *valor = OperandoIndirecto(aux, simbolos,cantRotulos ,errorOp);
             } else
-                *errorOp = 1;                                       //error por falta de ]
+                *errorOp = 1;                                       //hubo algun error (falta de ] o con el registro)
         } else if (op[0] >= 'A' && op[0] <= 'F' && op[1] == 'X') {  //Para pasar la letra a su valor decimal (A=10, B=11,...,F=15)
             *tipo = 1;
             *valor = op[0] - 55;
@@ -635,8 +711,8 @@ int tieneHeader(char comando[DIM_COMANDO]) {
 }
 
 void magia() {
-    printf("-----------------------VERSION 1.4----------------------------\n");
-    printf("----------Jamon temprano el Dia del Trabajador ---------------\n");
+    printf("-----------------------VERSION 1.5.2----------------------------\n");
+    printf("----------Fecha: Jamon 10/05 antes del mediodia ---------------\n");
     printf("------Nico: (Header) Falta crear una funcion y testing--------\n");
-    printf("-----Jamon: Falta testear y las constantes cadena-------------\n\n\n");
+    printf("-----Jamon: Falta testear las constantes cadena-------------\n\n\n");
 }
