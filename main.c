@@ -18,12 +18,6 @@ typedef struct {
     int codigo;
     int operandos;
 } instruccion;
-typedef struct
-{
-    char parametro[DIM_PARAMETROS];
-    int codigo;
-} ParametrosHeader;
-
 typedef struct  //structura que maneja la salida por consola de lo que va haciendo el traductor
 {
     int codigo;
@@ -40,27 +34,27 @@ typedef struct {
 } Simbolos;
 
 void magia();
-void leeArchivo(Linea v[DIM_LINEACOMANDO], ParametrosHeader v2[5], int Header[], int *cant, char[]);  //lee del archivo asembler y lo traduce al binario
-void creaComando(char comando[DIM_COMANDO], char comentario[DIM_COMENTARIO], Linea *linea);           //Obvio que crea el comando jaja
-void corrigeComando(char comando[DIM_COMANDO], Linea *linea);                                         //corrige el comando, es decir se fija si tiene un rotulo prefijado o no
+void leeArchivo(Linea v[DIM_LINEACOMANDO], int Header[], int *cant, char[]);                 //lee del archivo asembler y lo traduce al binario
+void creaComando(char comando[DIM_COMANDO], char comentario[DIM_COMENTARIO], Linea *linea);  //Obvio que crea el comando jaja
+void corrigeComando(char comando[DIM_COMANDO], Linea *linea);                                //corrige el comando, es decir se fija si tiene un rotulo prefijado o no
 void muestra(Linea v[DIM_LINEACOMANDO], int cant);
 void compilaCodigo(Linea v[DIM_LINEACOMANDO], int Header[], int cant, instruccion ins[DIM_OPERACIONES], char[], int *);
 void creaBinario(Linea linea[DIM_LINEACOMANDO], int Header[], Simbolos rotulos[], int, int cantOperaciones, char nombreArch[]);
 void RecuperaInstruccion(Linea LineaActual, char instruccionActual[DIM_COMANDO], Simbolos simbolos[], int cant, char op1[], char op2[]);
-long ArmaCodigo(int, int, char op1[], char op2[],Simbolos simbolos[], int ,int *, int i);
-void ArmaOperando(char op[DIM_COMANDO], int cantOperandos, int indice, int *valor,Simbolos s[],int ,int *errorOp, int *tipo);
+long ArmaCodigo(int, int, char op1[], char op2[], Simbolos simbolos[], int, int *, int i);
+void ArmaOperando(char op[DIM_COMANDO], int cantOperandos, int indice, int *valor, Simbolos s[], int, int *errorOp, int *tipo);
 int BuscaRotulo(char op1[], Simbolos simbolos[CANT_CELDAS], int cantRotulos);
 void VerificaDuplicado(char cadena[DIM_COMANDO], Simbolos simbolos[CANT_CELDAS], int n, int *duplicado);
 void BuscaComa(char[], int *error);
 void CorrigeBlancos(char cadena[DIM_COMANDO]);
 void CargaConstanteEQU(char comando[DIM_COMANDO], Simbolos s[], int posActual);
 int anytoint(char *s, char **out);
-int OperandoIndirecto(char[],Simbolos s[],int, int *);
+int OperandoIndirecto(char[], Simbolos s[], int, int *);
 int ComandoValido(char comando[DIM_COMANDO], instruccion ins[DIM_OPERACIONES]);
 void cargaInstrucciones(instruccion ins[DIM_OPERACIONES]);
 int tieneHeader(char comando[DIM_COMANDO]);
-void cargaParametrosHeader(ParametrosHeader parametrosHeader[DIM_PARAMETROS]);
-void creaHeader(ParametrosHeader v2[5], int Header[], char *comando);  //en el char va el nombre del archivo (El Header puede estar en cualquier parte del codigo) para poder leer el header
+void cargaParametrosHeader(int Header[5]);
+void creaHeader(int Header[5], char *comando);  //en el char va el nombre del archivo (El Header puede estar en cualquier parte del codigo) para poder leer el header
 
 int main(int argsCant, char *arg[])  //argsCant es cantidad de argumentos
 {
@@ -68,12 +62,11 @@ int main(int argsCant, char *arg[])  //argsCant es cantidad de argumentos
     Linea Lineas[DIM_LINEACOMANDO];
     instruccion instrucciones[DIM_OPERACIONES];
     int Header[5];
-    ParametrosHeader parHeader[5];
     cargaInstrucciones(instrucciones);
-    //cargaParametrosHeader(parHeader);
+    cargaParametrosHeader(Header);
     magia();
     if (argsCant >= 3) {
-        leeArchivo(Lineas, parHeader, Header, &cant, arg[1]);
+        leeArchivo(Lineas, Header, &cant, arg[1]);
         compilaCodigo(Lineas, Header, cant, instrucciones, arg[2], &errorSintaxis);  //arg[1] archivo assembler y arg[2] es nombre archivo salida .bin
         if (errorSintaxis)
             printf("\n ERROR EN LA COMPILACION: Error de sintaxis en la instruccion nro: %d \n\n", errorSintaxis + 1);
@@ -94,7 +87,7 @@ int main(int argsCant, char *arg[])  //argsCant es cantidad de argumentos
         printf("\nCompilacion exitosa, no se detectaron errores de sintaxis\n\n");
     return 0;
 }
-void leeArchivo(Linea v[DIM_LINEACOMANDO], ParametrosHeader v2[5], int Header[], int *cant, char ArchFuente[40]) {
+void leeArchivo(Linea v[DIM_LINEACOMANDO], int Header[], int *cant, char ArchFuente[40]) {
     int i = 0;                        //posicion del caracter en la palabra (aclaracion: esto solo se utiliza en el codigo y no en las aclaraciones\comentarios)
     char caracter;                    //para leer un unico caracter del archivo
     char comando[DIM_COMANDO];        //variable que se utiliza para almacenar el comando
@@ -121,7 +114,7 @@ void leeArchivo(Linea v[DIM_LINEACOMANDO], ParametrosHeader v2[5], int Header[],
             creaComando(comando, comentario, &v[*cant]);
             (*cant)++;
         } else
-            creaHeader(v2, Header, comando);
+            creaHeader(Header, comando);
         comando[0] = '\0';
         comentario[0] = '\0';
         fscanf(arch, "%c", &caracter);
@@ -253,7 +246,7 @@ void compilaCodigo(Linea linea[DIM_LINEACOMANDO], int Header[], int cant, instru
             pos = ComandoValido(instruccionActual, instrucciones);
             if (pos != -1) {
                 errorOperando = 0;
-                codOp = ArmaCodigo(instrucciones[pos].codigo, instrucciones[pos].operandos, op1, op2,simbolos,cantRotulos, &errorOperando, i + 1);
+                codOp = ArmaCodigo(instrucciones[pos].codigo, instrucciones[pos].operandos, op1, op2, simbolos, cantRotulos, &errorOperando, i + 1);
                 if (instrucciones[pos].operandos == 2)
                     BuscaComa(linea[i].comando, &errorOperando);
                 if (errorOperando == 0) {
@@ -327,13 +320,13 @@ void RecuperaInstruccion(Linea LineaActual, char instruccionActual[DIM_COMANDO],
         }
     }
 }
-long ArmaCodigo(int codigo, int cantOperandos, char op1[DIM_COMANDO], char op2[DIM_COMANDO],Simbolos simbolos[CANT_CELDAS],int cantRotulos ,int *errorOp, int indice) {
+long ArmaCodigo(int codigo, int cantOperandos, char op1[DIM_COMANDO], char op2[DIM_COMANDO], Simbolos simbolos[CANT_CELDAS], int cantRotulos, int *errorOp, int indice) {
     long codAux = 0;
     char aux2[DIM_COMANDO] = {0};
     int opA = 0, opB = 0;
     int tipoOp1 = 0, tipoOp2 = 0;
-    ArmaOperando(op1, cantOperandos, indice, &opA, simbolos,cantRotulos,errorOp, &tipoOp1);
-    ArmaOperando(op2, cantOperandos, indice, &opB, simbolos,cantRotulos,errorOp, &tipoOp2);
+    ArmaOperando(op1, cantOperandos, indice, &opA, simbolos, cantRotulos, errorOp, &tipoOp1);
+    ArmaOperando(op2, cantOperandos, indice, &opB, simbolos, cantRotulos, errorOp, &tipoOp2);
     if (cantOperandos == 2)
         codAux = codigo << 28 | ((tipoOp1 << 26) & 0xC000000) | ((tipoOp2 << 24) & 0x3000000) | ((opA << 12) & 0xFFF000) | (opB & 0xFFF);
     else if (cantOperandos == 1)
@@ -343,14 +336,42 @@ long ArmaCodigo(int codigo, int cantOperandos, char op1[DIM_COMANDO], char op2[D
     return codAux;
 }
 void creaBinario(Linea linea[DIM_LINEACOMANDO], int Header[], Simbolos simbolos[CANT_CELDAS], int cantRotulos, int cantidadOperaciones, char nombreArch[]) {
-    int valorAscii, k, i;
+    int cantidadValidas = 0, valorAscii, k, i;
     FILE *archivoSalida;
     archivoSalida = fopen(nombreArch, "wb");
-    for (i = 0; i < 5; i++)
-        fwrite(&Header[i], sizeof(Header[i]), 1, archivoSalida);
 
     for (i = 0; i < cantidadOperaciones; i++)
-        if (linea[i].codigo != -1)  //Si no es un solo comentario
+        if (linea[i].codigo != -1 && linea[i].codigo != -2)
+            cantidadValidas++;    //Cuenta la cantidad de instrucciones validas para colocar el valor en el header de CodeSegment
+    Header[4] = cantidadValidas;  //Code Segment
+
+    fwrite(&Header[0], sizeof(Header[0]), 1, archivoSalida);
+    //En 0 es la cabecera MV21 no hace falta verificar
+    for (i = 1; i < 5; i++) {
+        if (Header[i] > 0)
+            fwrite(&Header[i], sizeof(Header[i]), 1, archivoSalida);
+        else {
+            switch (i) {
+                case 1:
+                    printf("Error en header DATA - Tamano negativo\n");
+                    break;
+                case 2:
+                    printf("Error en header STACK - Tamano negativo\n");
+                    break;
+                case 3:
+                    printf("Error en header EXTRA - Tamano negativo\n");
+                    break;
+            }
+            Header[i] = 1024;
+            printf("Se reemplaza por 1024 y continua la traduccion\n");
+            fwrite(&Header[i], sizeof(Header[i]), 1, archivoSalida);
+        }
+    }
+    if (Header[1]+Header[2]+Header[3]+Header[4]>65535)
+        printf("ERROR: La suma del tamano de los header supera el permitido por la arquitectura\n");
+
+    for (i = 0; i < cantidadOperaciones; i++)
+        if (linea[i].codigo != -1 && linea[i].codigo != -2)  //Si no es un solo comentario o una constante EQU
             fwrite(&linea[i].hexa, sizeof(linea[i].hexa), 1, archivoSalida);
     for (i = 0; i < cantRotulos; i++) {
         if (simbolos[i].esCadena == 1)
@@ -418,7 +439,7 @@ int anytoint(char *s, char **out) {
     return strtol(s, out, base);
 }
 
-int OperandoIndirecto(char aux[DIM_COMANDO],Simbolos simbolos[CANT_CELDAS], int cantRotulos ,int *error) {
+int OperandoIndirecto(char aux[DIM_COMANDO], Simbolos simbolos[CANT_CELDAS], int cantRotulos, int *error) {
     char offsetString[20], registros[16][3];
     int resta = 0, offset, i, j, codigo = 0;
     char regActual[3];
@@ -467,21 +488,21 @@ int OperandoIndirecto(char aux[DIM_COMANDO],Simbolos simbolos[CANT_CELDAS], int 
                 i++;
                 j++;
             }
-           
+
             offsetString[j + 1] = '\0';
             if (offsetString[0] >= '0' && offsetString[0] <= '9')
-                offset = anytoint(offsetString, NULL); //No es una constante (Es un numero entero)
-            else{
-                int pos = BuscaRotulo(offsetString,simbolos,cantRotulos);
-                if (pos != -1) //Existe el rótulo?
-                    offset = pos; 
+                offset = anytoint(offsetString, NULL);  //No es una constante (Es un numero entero)
+            else {
+                int pos = BuscaRotulo(offsetString, simbolos, cantRotulos);
+                if (pos != -1)  //Existe el rótulo?
+                    offset = pos;
                 else {
                     printf("\nERROR DE ROTULO NO ENCONTRADO: Rotulo: %s\n", offsetString);
                     *error = 1;
                     offset = 0;
                 }
             }
-           if (resta)
+            if (resta)
                 offset *= -1;  //cambia signo
         }
         return ((offset & 0xFF) << 4 | codigo);
@@ -573,7 +594,7 @@ void cargaInstrucciones(instruccion ins[DIM_OPERACIONES]) {
     ins[31].codigo = 0xFF1;
     ins[31].operandos = 0;
 }
-void ArmaOperando(char op[DIM_COMANDO], int cantOperandos, int indice, int *valor,Simbolos simbolos[CANT_CELDAS],int cantRotulos ,int *errorOp, int *tipo) {
+void ArmaOperando(char op[DIM_COMANDO], int cantOperandos, int indice, int *valor, Simbolos simbolos[CANT_CELDAS], int cantRotulos, int *errorOp, int *tipo) {
     char aux[DIM_COMANDO] = {0};
     int valorRealOP;
     int i;
@@ -591,7 +612,7 @@ void ArmaOperando(char op[DIM_COMANDO], int cantOperandos, int indice, int *valo
             } else if (op[i] != '\0' && (aux[0] >= 'A' && aux[0] <= 'F' || aux[0] == 'H' || aux[0] == 'I' || aux[0] == 'S')) {
                 aux[i] = '\0';
                 *tipo = 3;
-                *valor = OperandoIndirecto(aux, simbolos,cantRotulos ,errorOp);
+                *valor = OperandoIndirecto(aux, simbolos, cantRotulos, errorOp);
             } else
                 *errorOp = 1;                                       //hubo algun error (falta de ] o con el registro)
         } else if (op[0] >= 'A' && op[0] <= 'F' && op[1] == 'X') {  //Para pasar la letra a su valor decimal (A=10, B=11,...,F=15)
@@ -667,37 +688,55 @@ void CargaConstanteEQU(char comando[DIM_COMANDO], Simbolos simbolos[CANT_CELDAS]
     }
 }
 
-void cargaParametrosHeader(ParametrosHeader parametrosHeader[DIM_PARAMETROS]) {
-    strcpy(parametrosHeader[0].parametro, '\0');
-    parametrosHeader[0].codigo = 0x4D563231;
-    strcpy(parametrosHeader[1].parametro, "DATA");
-    strcpy(parametrosHeader[2].parametro, "STACK");
-    strcpy(parametrosHeader[3].parametro, "EXTRA");
-    strcpy(parametrosHeader[4].parametro, '\0');
-
-    for (int i = 1; i < 3; i++)
-        parametrosHeader[i].codigo = 0x400;
+void cargaParametrosHeader(int Header[5]) {
+    Header[0] = 0x4D563231;
+    for (int i = 1; i < 4; i++)
+        Header[i] = 0x400;
 }
-void recuperaSegmento(int *pos, int *hexa, char aux[DIM_COMANDO], char valor[DIM_COMANDO], ParametrosHeader v2[5]) {
-    //halta hacer la magia aca uwu
+void recuperaSegmento(int *pos, int *hexa, char idPalabra[DIM_COMANDO], char valor[DIM_COMANDO]) {
+    *hexa = anytoint(valor, NULL);
+    if (strcmp(idPalabra, "DATA") == 0) {
+        *pos = 1;
+    } else if (strcmp(idPalabra, "STACK") == 0) {
+        *pos = 2;
+    } else if (strcmp(idPalabra, "EXTRA") == 0) {
+        *pos = 3;
+    } else {  //error
+        *pos = -1;
+        *hexa = -1;
+    }
 }
 
-void creaHeader(ParametrosHeader v2[5], int Header[], char *comando)  //en el char va el nombre del archivo (El Header puede estar en cualquier parte del codigo) para poder leer el header
+void creaHeader(int Header[5], char *comando)  //en el char va el nombre del archivo (El Header puede estar en cualquier parte del codigo) para poder leer el header
 {
     char aux[DIM_COMANDO], valor[DIM_COMANDO];
-    int i = 0, j = 0;
+    int i = 0, j = 0, k = 0;
     int pos, hexa;
     while (comando[i] != ' ' && comando[i] != '	')
         i++;
     while (comando[i] != '\0') {
         if (comando[i] != '=')
-            aux[i++] = comando[i];
+            if (comando[i] != ' ' && comando[i] != '	') 
+                aux[k++] = toupper(comando[i++]);
+            else
+                i++; //hay un blanco molestando al inicio
         else {
             i++;
             while (comando[i] != '\0' && comando[i] != ' ' && comando[i] != '	')
                 valor[j++] = comando[i++];
-            recuperaSegmento(&pos, &hexa, aux, valor, v2);
-            Header[pos] = hexa;
+            recuperaSegmento(&pos, &hexa, aux, valor);
+            if (pos != -1)
+                Header[pos] = hexa;
+            else
+                printf("Error en el header: '%s' no es valido\nse usara tamano de celda 1024 para los campos no especificados o con error\n", aux);
+
+            //Inicializa de nuevo para siguiente vuelta
+            for (int x = 0; x <= j; x++)
+                valor[x] = '\0';
+            for (int x = 0; x <= k; x++)
+                aux[x] = '\0';
+            k = 0;
+            j = 0;
         }
     }
     Header[0] = 0x4D563231;
@@ -711,8 +750,9 @@ int tieneHeader(char comando[DIM_COMANDO]) {
 }
 
 void magia() {
-    printf("-----------------------VERSION 1.5.2----------------------------\n");
-    printf("----------Fecha: Jamon 10/05 antes del mediodia ---------------\n");
+    printf("-----------------------VERSION 1.5.4----------------------------\n");
+    printf("----------Fecha: Jamon 14/05 antes del mediodia ---------------\n");
     printf("------Nico: (Header) Falta crear una funcion y testing--------\n");
+    printf("------Jamon:  CREADA LA FUNCION! Falta testing----------------\n");
     printf("-----Jamon: Falta testear las constantes cadena-------------\n\n\n");
 }
