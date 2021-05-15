@@ -343,7 +343,12 @@ void creaBinario(Linea linea[DIM_LINEACOMANDO], int Header[], Simbolos simbolos[
     for (i = 0; i < cantidadOperaciones; i++)
         if (linea[i].codigo != -1 && linea[i].codigo != -2)
             cantidadValidas++;    //Cuenta la cantidad de instrucciones validas para colocar el valor en el header de CodeSegment
+    for (i = 0; i < cantRotulos; i++) {
+        if (simbolos[i].esCadena == 1)
+            cantidadValidas += strlen(simbolos[i].cadena)+1;
+    }
     Header[4] = cantidadValidas;  //Code Segment
+     
 
     fwrite(&Header[0], sizeof(Header[0]), 1, archivoSalida);
     //En 0 es la cabecera MV21 no hace falta verificar
