@@ -751,7 +751,7 @@ int tieneHeader(char comando[DIM_COMANDO]) {
     int i = 0;
     while (comando[i] != '\\' && comando[i] != '\0')
         i++;
-    return comando[i + 1] == '\\';
+    return (comando[i] != '\0' && comando[i + 1] == '\\');
 }
 
 void magia() {
