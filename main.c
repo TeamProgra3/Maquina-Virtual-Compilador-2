@@ -94,7 +94,7 @@ void leeArchivo(Linea v[DIM_LINEACOMANDO], int Header[], int *cant, char ArchFue
     char comentario[DIM_COMENTARIO];  //Variable que almacena el comentario
     FILE *arch;
 
-    //arch = fopen("C:/Users/Augusto/Documents/Facultad/Arquitectura/MaquinaVirtual/Maquina-Virtual-Compilador-2/prueba.txt", "rt");
+    //arch = fopen("C:/Users/Augusto/Documents/Facultad/Arquitectura/MaquinaVirtual/Maquina-Virtual-Compilador-2/jumpTest.asm", "rt");
     arch = fopen(ArchFuente, "rt");
     fscanf(arch, "%c", &caracter);
     while (!feof(arch)) {
@@ -209,6 +209,7 @@ void compilaCodigo(Linea linea[DIM_LINEACOMANDO], int Header[], int cant, instru
                     simbolos[cantRotulos].valor = cantOpsValidas;
                     simbolos[cantRotulos].esCadena = 0;
                     cantRotulos++;
+                    cantOpsValidas++;
                 } else {
                     printf("ERROR! El simbolo %s es un duplicado! \nFue declarado nuevamente en la linea: %d\n", linea[i].rotulo, i + 1);
                     *error = i;
@@ -298,7 +299,7 @@ void RecuperaInstruccion(Linea LineaActual, char instruccionActual[DIM_COMANDO],
             }
             op2[j] = '\0';
             CorrigeBlancos(op2);
-            if (op2[0] != '[' && op2[0] != '#' && op2[0] != '@' && op2[0] != '%' && !(op2[1] == 'X' && op2[0] <= 'F' && op2[0] >= 'A') && !(op2[0] >= '0' && op2[0] <= '9') && strcmp(op2, "AC") != 0) {  //Es un rotulo
+            if (strlen(op2)>=3 && op2[0] != '[' && op2[0] != '#' && op2[0] != '@' && op2[0] != '%' && !(op2[1] == 'X' && op2[0] <= 'F' && op2[0] >= 'A') && !(op2[0] >= '0' && op2[0] <= '9') && strcmp(op2, "AC") != 0) {  //Es un rotulo
                 pos = BuscaRotulo(op2, simbolos, cantRotulos);
                 if (pos != -1) {
                     sprintf(op2, "%d", pos);  //Caracter que representa el numero
@@ -309,7 +310,7 @@ void RecuperaInstruccion(Linea LineaActual, char instruccionActual[DIM_COMANDO],
             }
         }
         //Verificar si el primer operando es un rotulo, en ese caso modificar el rotulo por el numero de linea correspondiente
-        if (op1[0] != '[' && op1[0] != '#' && op1[0] != '@' && op1[0] != '%' && !(op1[1] == 'X' && op1[0] <= 'F' && op1[0] >= 'A') && !(op1[0] >= '0' && op1[0] <= '9') && strcmp(op1, "AC") != 0) {  //Es un rotulo
+        if (strlen(op1)>=3 && op1[0] != '[' && op1[0] != '#' && op1[0] != '@' && op1[0] != '%' && !(op1[1] == 'X' && op1[0] <= 'F' && op1[0] >= 'A') && !(op1[0] >= '0' && op1[0] <= '9') && strcmp(op1, "AC") != 0) {  //Es un rotulo
             pos = BuscaRotulo(op1, simbolos, cantRotulos);
             if (pos != -1) {
                 sprintf(op1, "%d", pos);  //Caracter que representa el numero
@@ -510,7 +511,7 @@ int OperandoIndirecto(char aux[DIM_COMANDO], Simbolos simbolos[CANT_CELDAS], int
             if (resta)
                 offset *= -1;  //cambia signo
         }
-        return ((offset & 0xFF) << 4 | codigo);
+        return (((offset & 0xFF) << 4) | codigo);
     }
 }
 
@@ -626,6 +627,12 @@ void ArmaOperando(char op[DIM_COMANDO], int cantOperandos, int indice, int *valo
         } else if (strcmp(op, "AC") == 0) {
             *tipo = 1;
             *valor = 9;
+         } else if (strcmp(op, "BP") == 0) {
+            *tipo = 1;
+            *valor =7;
+         } else if (strcmp(op, "SP") == 0) {
+            *tipo = 1;
+            *valor = 6;
         } else if ((int)op[0] == 39) {  //Comilla simple '
             *valor = (int)op[1];
         } else {  // Es un inmediato
