@@ -356,3 +356,7 @@ MigrationBackup/
 *.cbp
 *.depend
 *.exe
+prueba.bin
+desktop.ini
+.vscode/tasks.json
+.vscode/launch.json
