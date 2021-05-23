@@ -94,7 +94,7 @@ void leeArchivo(Linea v[DIM_LINEACOMANDO], int Header[], int *cant, char ArchFue
     char comentario[DIM_COMENTARIO];  //Variable que almacena el comentario
     FILE *arch;
 
-    //arch = fopen("C:/Users/Augusto/Documents/Facultad/Arquitectura/MaquinaVirtual/Maquina-Virtual-Compilador-2/jumpTest.asm", "rt");
+    //arch = fopen("C:/Users/Augusto/Documents/Facultad/Arquitectura/MaquinaVirtual/Maquina-Virtual-Compilador-2/roto.asm", "rt");
     arch = fopen(ArchFuente, "rt");
     fscanf(arch, "%c", &caracter);
     while (!feof(arch)) {
@@ -140,16 +140,22 @@ void creaComando(char comando[DIM_COMANDO], char comentario[DIM_COMENTARIO], Lin
 void corrigeComando(char comando[DIM_COMANDO], Linea *linea) {
     int i = 0;
     int j = 0;
-    int k;
-    char aux[25];
+    int k=0;
+    char aux[DIM_COMENTARIO];
     CorrigeBlancos(comando);
     while (comando[i] != ':' && comando[i] != '\0')
         //  UTILIZA UN AUX PARA ALMACENAR LO QUE LLEGA DE COMANDO
-        if ((int)comando[j - 1] != 39)  //comilla simple
+        if ((int)comando[j - 1] != 39 && linea->codigo != -2)  //comilla simple o cadena EQU
             aux[j++] = toupper(comando[i++]);
         else
             aux[j++] = comando[i++];
-
+    if (linea->codigo == -2){
+        while (aux[k] != ' '){
+            aux[k] = toupper(aux[k]); //rotulo va en mayus
+            k++;
+        }
+    }
+    k = 0;
     if (comando[i] == ':') {
         //  SI SE ENCUENTA CON UN ':' (PRESENCIA DE UN ROTULO) LO INGRESA EN LA SECCION ROTULO
         i++;
@@ -590,7 +596,6 @@ void cargaInstrucciones(instruccion ins[DIM_OPERACIONES]) {
 
     for (int i = 15; i <= 29; i++)
         ins[i].operandos = 1;
-
     //0 operandos
     strcpy(ins[30].inst, "RET");
     ins[30].codigo = 0xFF0;
@@ -647,13 +652,15 @@ void ArmaOperando(char op[DIM_COMANDO], int cantOperandos, int indice, int *valo
             if (*valor < -2048 || *valor > 2047) {  //-2048 a 2047
                 valorRealOP = *valor << 20;
                 valorRealOP = valorRealOP >> 20;
-                printf("\nAdvertencia EL VALOR EXCEDE EL LIMITE MAXIMO DE MEMORIA: linea: %i - Valor original: %d - Valor truncado a: %d \n", indice, *valor, valorRealOP);
+                if (*tipo != 3)
+                    printf("\nAdvertencia EL VALOR EXCEDE EL LIMITE MAXIMO DE MEMORIA: linea: %i - Valor original: %d - Valor truncado a: %d \n", indice, *valor, valorRealOP);
             }
         } else if (cantOperandos == 1)
             if (*valor < -32768 || *valor > 32767) {  // -32768 a 32767
                 valorRealOP = *valor << 16;
                 valorRealOP = valorRealOP >> 16;
-                printf("\nAdvertencia EL VALOR EXCEDE EL LIMITE MAXIMO DE MEMORIA: linea: %i - Valor original: %d - Valor truncado a: %d \n", indice, *valor, valorRealOP);
+                if (*tipo != 3)
+                    printf("\nAdvertencia EL VALOR EXCEDE EL LIMITE MAXIMO DE MEMORIA: linea: %i - Valor original: %d - Valor truncado a: %d \n", indice, *valor, valorRealOP);
             }
     }
 }
@@ -762,9 +769,10 @@ int tieneHeader(char comando[DIM_COMANDO]) {
 }
 
 void magia() {
-    printf("-----------------------VERSION 1.5.4----------------------------\n");
-    printf("----------Fecha: Jamon 14/05 antes del mediodia ---------------\n");
-    printf("------Nico: (Header) Falta crear una funcion y testing--------\n");
-    printf("------Jamon:  CREADA LA FUNCION! Falta testing----------------\n");
-    printf("-----Jamon: Falta testear las constantes cadena-------------\n\n\n");
+    printf("|=======================================================================================|\n");
+    printf("|-----------------------[>>>> Compilador MV 2021 - Grupo F <<<<]------------------------|\n");
+    printf("|------------------------------------- VERSION 1.6.2 -------------------------------------|\n");
+    printf("|=======================================================================================|\n\n");
 }
+    
+    
