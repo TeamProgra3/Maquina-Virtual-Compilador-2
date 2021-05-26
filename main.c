@@ -305,7 +305,7 @@ void RecuperaInstruccion(Linea LineaActual, char instruccionActual[DIM_COMANDO],
             }
             op2[j] = '\0';
             CorrigeBlancos(op2);
-            if (strlen(op2)>=3 && op2[0] != '[' && op2[0] != '#' && op2[0] != '@' && op2[0] != '%' && !(op2[1] == 'X' && op2[0] <= 'F' && op2[0] >= 'A') && !(op2[0] >= '0' && op2[0] <= '9') && strcmp(op2, "AC") != 0) {  //Es un rotulo
+            if (op2[0] != '-' && strlen(op2)>=3 && op2[0] != '[' && op2[0] != '#' && op2[0] != '@' && op2[0] != '%' && !(op2[1] == 'X' && op2[0] <= 'F' && op2[0] >= 'A') && !(op2[0] >= '0' && op2[0] <= '9') && strcmp(op2, "AC") != 0) {  //Es un rotulo
                 pos = BuscaRotulo(op2, simbolos, cantRotulos);
                 if (pos != -1) {
                     sprintf(op2, "%d", pos);  //Caracter que representa el numero
@@ -316,7 +316,7 @@ void RecuperaInstruccion(Linea LineaActual, char instruccionActual[DIM_COMANDO],
             }
         }
         //Verificar si el primer operando es un rotulo, en ese caso modificar el rotulo por el numero de linea correspondiente
-        if (strlen(op1)>=3 && op1[0] != '[' && op1[0] != '#' && op1[0] != '@' && op1[0] != '%' && !(op1[1] == 'X' && op1[0] <= 'F' && op1[0] >= 'A') && !(op1[0] >= '0' && op1[0] <= '9') && strcmp(op1, "AC") != 0) {  //Es un rotulo
+        if (op1[0] != '-' && strlen(op1)>=3 && op1[0] != '[' && op1[0] != '#' && op1[0] != '@' && op1[0] != '%' && !(op1[1] == 'X' && op1[0] <= 'F' && op1[0] >= 'A') && !(op1[0] >= '0' && op1[0] <= '9') && strcmp(op1, "AC") != 0) {  //Es un rotulo
             pos = BuscaRotulo(op1, simbolos, cantRotulos);
             if (pos != -1) {
                 sprintf(op1, "%d", pos);  //Caracter que representa el numero
@@ -337,7 +337,7 @@ long ArmaCodigo(int codigo, int cantOperandos, char op1[DIM_COMANDO], char op2[D
     if (cantOperandos == 2)
         codAux = codigo << 28 | ((tipoOp1 << 26) & 0xC000000) | ((tipoOp2 << 24) & 0x3000000) | ((opA << 12) & 0xFFF000) | (opB & 0xFFF);
     else if (cantOperandos == 1)
-        codAux = codigo << 24 | ((tipoOp1 << 22) & 0xC00000) | (opA & 0xFFF);
+        codAux = codigo << 24 | ((tipoOp1 << 22) & 0xC00000) | (opA & 0xFFFF);
     else
         codAux = codigo << 20;
     return codAux;
@@ -644,6 +644,15 @@ void ArmaOperando(char op[DIM_COMANDO], int cantOperandos, int indice, int *valo
             if (op[strlen(op) - 1] != ']') {
                 *tipo = 0;
                 *valor = anytoint(op, NULL);
+                if (op[0]== '%' || op[0]== '#' || op[0]== '@'){
+                    if (cantOperandos == 2){
+                        *valor = *valor << 20;
+                        *valor = *valor >> 20;
+                    } else {
+                        *valor = *valor << 16;
+                        *valor = *valor >> 16;
+                    }
+                }
             } else {  //Falta el [ (ERROR)
                 *errorOp = 1;
             }
