@@ -616,7 +616,7 @@ void ArmaOperando(char op[DIM_COMANDO], int cantOperandos, int indice, int *valo
                 aux[i - 1] = op[i];
                 i++;
             }
-            if (op[i] != '\0' && (aux[0] >= '0' && aux[0] <= '9')) {
+            if (op[i] != '\0' && (aux[0] >= '0' && aux[0] <= '9' || aux[0] == '%' || aux[0] == '@' || aux[0] == '#')) {
                 aux[i] = '\0';
                 *valor = anytoint(aux, NULL);
                 *tipo = 2;
