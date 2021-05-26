@@ -307,7 +307,7 @@ void RecuperaInstruccion(Linea LineaActual, char instruccionActual[DIM_COMANDO],
             CorrigeBlancos(op2);
             if (op2[0] != '\'' && op2[0] != '-' && strlen(op2)>=3 && op2[0] != '[' && op2[0] != '#' && op2[0] != '@' && op2[0] != '%' && !(op2[1] == 'X' && op2[0] <= 'F' && op2[0] >= 'A') && !(op2[0] >= '0' && op2[0] <= '9') && strcmp(op2, "AC") != 0) {  //Es un rotulo
                 pos = BuscaRotulo(op2, simbolos, cantRotulos);
-                if (pos != -1) {
+                if (pos != -9999) {
                     sprintf(op2, "%d", pos);  //Caracter que representa el numero
                 } else {
                     //ROTULO NO ENCONTRADO! Error!
@@ -318,7 +318,7 @@ void RecuperaInstruccion(Linea LineaActual, char instruccionActual[DIM_COMANDO],
         //Verificar si el primer operando es un rotulo, en ese caso modificar el rotulo por el numero de linea correspondiente
         if (op1[0] != '\'' && op1[0] != '-' && strlen(op1)>=3 && op1[0] != '[' && op1[0] != '#' && op1[0] != '@' && op1[0] != '%' && !(op1[1] == 'X' && op1[0] <= 'F' && op1[0] >= 'A') && !(op1[0] >= '0' && op1[0] <= '9') && strcmp(op1, "AC") != 0) {  //Es un rotulo
             pos = BuscaRotulo(op1, simbolos, cantRotulos);
-            if (pos != -1) {
+            if (pos != -9999) {
                 sprintf(op1, "%d", pos);  //Caracter que representa el numero
             } else {
                 //ROTULO NO ENCONTRADO! Error!
@@ -400,7 +400,7 @@ int BuscaRotulo(char op1[], Simbolos simbolos[CANT_CELDAS], int cantRotulos) {
     while (i < cantRotulos && strcmp(op1, simbolos[i].rotulo) != 0)
         i++;
     if (i == cantRotulos)
-        return -1;  //rotulo no encontrado;
+        return -9999;  //rotulo no encontrado;
     else
         return simbolos[i].valor;
 }
