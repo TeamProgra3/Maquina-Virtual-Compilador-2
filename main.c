@@ -94,10 +94,10 @@ void leeArchivo(Linea v[DIM_LINEACOMANDO], int Header[], int *cant, char ArchFue
     char comentario[DIM_COMENTARIO];  //Variable que almacena el comentario
     FILE *arch;
 
-    //arch = fopen("C:/Users/Augusto/Documents/Facultad/Arquitectura/MaquinaVirtual/Maquina-Virtual-Compilador-2/roto.asm", "rt");
+    //arch = fopen("C:/Users/Augusto/Documents/Facultad/Arquitectura/MaquinaVirtual/Maquina-Virtual-Compilador-2/debug.asm", "rt");
     arch = fopen(ArchFuente, "rt");
     fscanf(arch, "%c", &caracter);
-    while (!feof(arch)) {
+    while (!feof(arch)) { 
         while (caracter != ';' && caracter != '\n' && !feof(arch)) {
             comando[i++] = caracter;
             fscanf(arch, "%c", &caracter);
@@ -279,7 +279,7 @@ void RecuperaInstruccion(Linea LineaActual, char instruccionActual[DIM_COMANDO],
     int pos, j, i = 0;
     char c = LineaActual.comando[0];
     op1[0] = op2[0] = '\0';
-    while (c != ' ' && c != '\0') {  //OPERACION
+    while (c != ' ' && c != '\0' && c != '	') {  //OPERACION
         instruccionActual[i++] = c;
         c = LineaActual.comando[i];
     }
@@ -305,7 +305,7 @@ void RecuperaInstruccion(Linea LineaActual, char instruccionActual[DIM_COMANDO],
             }
             op2[j] = '\0';
             CorrigeBlancos(op2);
-            if (op2[0] != '-' && strlen(op2)>=3 && op2[0] != '[' && op2[0] != '#' && op2[0] != '@' && op2[0] != '%' && !(op2[1] == 'X' && op2[0] <= 'F' && op2[0] >= 'A') && !(op2[0] >= '0' && op2[0] <= '9') && strcmp(op2, "AC") != 0) {  //Es un rotulo
+            if (op2[0] != '\'' && op2[0] != '-' && strlen(op2)>=3 && op2[0] != '[' && op2[0] != '#' && op2[0] != '@' && op2[0] != '%' && !(op2[1] == 'X' && op2[0] <= 'F' && op2[0] >= 'A') && !(op2[0] >= '0' && op2[0] <= '9') && strcmp(op2, "AC") != 0) {  //Es un rotulo
                 pos = BuscaRotulo(op2, simbolos, cantRotulos);
                 if (pos != -1) {
                     sprintf(op2, "%d", pos);  //Caracter que representa el numero
@@ -316,7 +316,7 @@ void RecuperaInstruccion(Linea LineaActual, char instruccionActual[DIM_COMANDO],
             }
         }
         //Verificar si el primer operando es un rotulo, en ese caso modificar el rotulo por el numero de linea correspondiente
-        if (op1[0] != '-' && strlen(op1)>=3 && op1[0] != '[' && op1[0] != '#' && op1[0] != '@' && op1[0] != '%' && !(op1[1] == 'X' && op1[0] <= 'F' && op1[0] >= 'A') && !(op1[0] >= '0' && op1[0] <= '9') && strcmp(op1, "AC") != 0) {  //Es un rotulo
+        if (op1[0] != '\'' && op1[0] != '-' && strlen(op1)>=3 && op1[0] != '[' && op1[0] != '#' && op1[0] != '@' && op1[0] != '%' && !(op1[1] == 'X' && op1[0] <= 'F' && op1[0] >= 'A') && !(op1[0] >= '0' && op1[0] <= '9') && strcmp(op1, "AC") != 0) {  //Es un rotulo
             pos = BuscaRotulo(op1, simbolos, cantRotulos);
             if (pos != -1) {
                 sprintf(op1, "%d", pos);  //Caracter que representa el numero
