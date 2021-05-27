@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #define DIM_ROTULO 20
-#define DIM_COMANDO 60
+#define DIM_COMANDO 200
 #define DIM_DIRECCIONES 50
 #define DIM_COMENTARIO 100
 #define DIM_LINEACOMANDO 200
@@ -65,7 +65,7 @@ int main(int argsCant, char *arg[])  //argsCant es cantidad de argumentos
     cargaInstrucciones(instrucciones);
     cargaParametrosHeader(Header);
     magia();
-    if (argsCant >= 3) {
+    if (argsCant <= 3) {
         leeArchivo(Lineas, Header, &cant, arg[1]);
         compilaCodigo(Lineas, Header, cant, instrucciones, arg[2], &errorSintaxis);  //arg[1] archivo assembler y arg[2] es nombre archivo salida .bin
         if (errorSintaxis)
@@ -94,8 +94,8 @@ void leeArchivo(Linea v[DIM_LINEACOMANDO], int Header[], int *cant, char ArchFue
     char comentario[DIM_COMENTARIO];  //Variable que almacena el comentario
     FILE *arch;
 
-    //arch = fopen("C:/Users/Augusto/Documents/Facultad/Arquitectura/MaquinaVirtual/Maquina-Virtual-Compilador-2/debug.asm", "rt");
-    arch = fopen(ArchFuente, "rt");
+    arch = fopen("C:/Users/Augusto/Documents/Facultad/Arquitectura/MaquinaVirtual/Maquina-Virtual-Compilador-2/8.asm", "rt");
+    //arch = fopen(ArchFuente, "rt");
     fscanf(arch, "%c", &caracter);
     while (!feof(arch)) { 
         while (caracter != ';' && caracter != '\n' && !feof(arch)) {
@@ -130,7 +130,7 @@ void creaComando(char comando[DIM_COMANDO], char comentario[DIM_COMENTARIO], Lin
         linea->codigo = -1;
     } else {
         i = 0;
-        while (comando[i] != '\0' && !(comando[i - 4] == ' ' && toupper(comando[i - 3]) == 'E' && toupper(comando[i - 2]) == 'Q' && toupper(comando[i - 1]) == 'U' && comando[i] == ' '))
+        while (comando[i] != '\0' && !((comando[i - 4] == ' '|| comando[i - 4] == '	') && toupper(comando[i - 3]) == 'E' && toupper(comando[i - 2]) == 'Q' && toupper(comando[i - 1]) == 'U' && (comando[i] == ' ' || comando[i] == '	')))
             i++;
         if (comando[i] != '\0')  //Es una constante EQU si esto es verdadero
             linea->codigo = -2;
@@ -143,20 +143,20 @@ void corrigeComando(char comando[DIM_COMANDO], Linea *linea) {
     int k=0;
     char aux[DIM_COMENTARIO];
     CorrigeBlancos(comando);
-    while (comando[i] != ':' && comando[i] != '\0')
+    while (!(comando[i] == ':' && linea->codigo != -2) && comando[i] != '\0')
         //  UTILIZA UN AUX PARA ALMACENAR LO QUE LLEGA DE COMANDO
         if ((int)comando[j - 1] != 39 && linea->codigo != -2)  //comilla simple o cadena EQU
             aux[j++] = toupper(comando[i++]);
         else
             aux[j++] = comando[i++];
     if (linea->codigo == -2){
-        while (aux[k] != ' '){
+        while (aux[k] != ' ' && aux[k] != '	' && aux[k] != '\0'){
             aux[k] = toupper(aux[k]); //rotulo va en mayus
             k++;
         }
     }
     k = 0;
-    if (comando[i] == ':') {
+    if (comando[i] == ':' && linea->codigo != 2) {
         //  SI SE ENCUENTA CON UN ':' (PRESENCIA DE UN ROTULO) LO INGRESA EN LA SECCION ROTULO
         i++;
         aux[j++] = '\0';
@@ -228,6 +228,7 @@ void compilaCodigo(Linea linea[DIM_LINEACOMANDO], int Header[], int cant, instru
                 }
                 aux[k] = '\0';
                 VerificaDuplicado(aux, simbolos, cantRotulos, &duplicado);
+                CorrigeBlancos(linea[i].comando);
                 if (!duplicado) {
                     CargaConstanteEQU(linea[i].comando, simbolos, cantRotulos);
                     cantRotulos++;
@@ -506,7 +507,7 @@ int OperandoIndirecto(char aux[DIM_COMANDO], Simbolos simbolos[CANT_CELDAS], int
                 offset = anytoint(offsetString, NULL);  //No es una constante (Es un numero entero)
             else {
                 int pos = BuscaRotulo(offsetString, simbolos, cantRotulos);
-                if (pos != -1)  //Existe el rótulo?
+                if (pos != -9999)  //Existe el rótulo?
                     offset = pos;
                 else {
                     printf("\nERROR DE ROTULO NO ENCONTRADO: Rotulo: %s\n", offsetString);
@@ -780,7 +781,7 @@ int tieneHeader(char comando[DIM_COMANDO]) {
 void magia() {
     printf("|=======================================================================================|\n");
     printf("|-----------------------[>>>> Compilador MV 2021 - Grupo F <<<<]------------------------|\n");
-    printf("|------------------------------------- VERSION 1.6.2 -----------------------------------|\n");
+    printf("|------------------------------------- VERSION 1.6.5 -----------------------------------|\n");
     printf("|=======================================================================================|\n\n");
 }
     
