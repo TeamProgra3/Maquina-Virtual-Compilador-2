@@ -65,7 +65,7 @@ int main(int argsCant, char *arg[])  //argsCant es cantidad de argumentos
     cargaInstrucciones(instrucciones);
     cargaParametrosHeader(Header);
     magia();
-    if (argsCant <= 3) {
+    if (argsCant >= 3) {
         leeArchivo(Lineas, Header, &cant, arg[1]);
         compilaCodigo(Lineas, Header, cant, instrucciones, arg[2], &errorSintaxis);  //arg[1] archivo assembler y arg[2] es nombre archivo salida .bin
         if (errorSintaxis)
@@ -94,8 +94,8 @@ void leeArchivo(Linea v[DIM_LINEACOMANDO], int Header[], int *cant, char ArchFue
     char comentario[DIM_COMENTARIO];  //Variable que almacena el comentario
     FILE *arch;
 
-    arch = fopen("C:/Users/Augusto/Documents/Facultad/Arquitectura/MaquinaVirtual/Maquina-Virtual-Compilador-2/8.asm", "rt");
-    //arch = fopen(ArchFuente, "rt");
+    //arch = fopen("C:/Users/Augusto/Documents/Facultad/Arquitectura/MaquinaVirtual/Maquina-Virtual-Compilador-2/9.asm", "rt");
+    arch = fopen(ArchFuente, "rt");
     fscanf(arch, "%c", &caracter);
     while (!feof(arch)) { 
         while (caracter != ';' && caracter != '\n' && !feof(arch)) {
@@ -608,7 +608,7 @@ void cargaInstrucciones(instruccion ins[DIM_OPERACIONES]) {
 }
 void ArmaOperando(char op[DIM_COMANDO], int cantOperandos, int indice, int *valor, Simbolos simbolos[CANT_CELDAS], int cantRotulos, int *errorOp, int *tipo) {
     char aux[DIM_COMANDO] = {0};
-    int valorRealOP;
+    int pos,valorRealOP;
     int i;
     if (op[0] != '\0') {
         if (op[0] == '[') {  //Operador de tipo celda memoria
@@ -617,12 +617,15 @@ void ArmaOperando(char op[DIM_COMANDO], int cantOperandos, int indice, int *valo
                 aux[i - 1] = op[i];
                 i++;
             }
-            if (op[i] != '\0' && (aux[0] >= '0' && aux[0] <= '9' || aux[0] == '%' || aux[0] == '@' || aux[0] == '#')) {
-                aux[i] = '\0';
+            aux[i] = '\0';
+            pos = BuscaRotulo(aux,simbolos,cantRotulos);
+            if (pos != -9999) {
+                *valor = pos;
+                *tipo = 2;
+            } else if (op[i] != '\0' && (aux[0] >= '0' && aux[0] <= '9' || aux[0] == '%' || aux[0] == '@' || aux[0] == '#')) {
                 *valor = anytoint(aux, NULL);
                 *tipo = 2;
             } else if (op[i] != '\0' && (aux[0] >= 'A' && aux[0] <= 'F' || aux[0] == 'H' || aux[0] == 'I' || aux[0] == 'S')) {
-                aux[i] = '\0';
                 *tipo = 3;
                 *valor = OperandoIndirecto(aux, simbolos, cantRotulos, errorOp);
             } else
@@ -781,7 +784,7 @@ int tieneHeader(char comando[DIM_COMANDO]) {
 void magia() {
     printf("|=======================================================================================|\n");
     printf("|-----------------------[>>>> Compilador MV 2021 - Grupo F <<<<]------------------------|\n");
-    printf("|------------------------------------- VERSION 1.6.5 -----------------------------------|\n");
+    printf("|---------------------------- VERSION 2.0.1: Post Coloquio -----------------------------|\n");
     printf("|=======================================================================================|\n\n");
 }
     

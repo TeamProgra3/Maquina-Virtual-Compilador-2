@@ -360,3 +360,5 @@ prueba.bin
 desktop.ini
 .vscode/tasks.json
 .vscode/launch.json
+*.bin
+*.out
