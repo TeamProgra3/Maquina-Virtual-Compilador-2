@@ -502,7 +502,7 @@ int OperandoIndirecto(char aux[DIM_COMANDO], Simbolos simbolos[CANT_CELDAS], int
                 j++;
             }
 
-            offsetString[j + 1] = '\0';
+            offsetString[j] = '\0';
             if (offsetString[0] >= '0' && offsetString[0] <= '9')
                 offset = anytoint(offsetString, NULL);  //No es una constante (Es un numero entero)
             else {
